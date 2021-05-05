@@ -2,7 +2,8 @@ import os
 import cv2
 import re 
 
-rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 28-10-2019/Positives/Clips"
+# rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 28-10-2019/Positives/Clips"
+rootdir = "./Frames1"
 regexavi = re.compile("(.*avi$)")
 
 def get_first_frame():
@@ -20,6 +21,7 @@ def get_first_frame():
 regexpng = re.compile("(.*png$)")
 for root, dirs, files in os.walk(rootdir):
 	for file in files:
-		if regexavi.match(file):
+		if regexpng.match(file):
+			print(file)
 
 # get_first_frame()
