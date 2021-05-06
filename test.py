@@ -111,8 +111,8 @@ ap.add_argument("-b", "--buffer-size", type=int, default=32,
 args = vars(ap.parse_args())
 
 
-path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Check for triangulation/Santa Maria/18-10-2019/2019-10-19_012100_JV_SEMDADOS.avi"
-# path = "elve.avi"
+# path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Check for triangulation/Santa Maria/18-10-2019/2019-10-19_012100_JV_SEMDADOS.avi"
+path = "elve.avi"
 # path = "E:/Campanha-2019/La Maria/29-10-2019/2019-10-29_002852_JV.avi"
 capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(path))
 # initialize key clip writer and the consecutive number of
@@ -122,13 +122,13 @@ kcw = KeyClipWriter(bufSize=args["buffer_size"])
 kernel = np.ones((5,5),np.uint8)
 # Define bright pixel count array of max size "window"
 window = 10
-minPixelChange = 50
+min_pixel_delta = 50
 # threshold = 62
 threshold = 0
 stacked_image = 0
 average = deque(maxlen = window)
-consecFrames = 0
-updateConsecFrames = False
+consec_frames = 0
+update_consec_frames = False
 capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
 # keep looping
@@ -142,8 +142,8 @@ while True:
 		# continue
 		break
 	# Increase the consecutive frames counter if a trigger occurred
-	if updateConsecFrames:
-		consecFrames += 1
+	if update_consec_frames:
+		consec_frames += 1
 	# if kcw.recording:
 	# 	cv2.rectangle(frame, (600,2), (680,20), (255,255,255), -1)
 	# 	cv2.putText(frame, "recording", (605, 15),
@@ -168,9 +168,9 @@ while True:
 		# print("{} - {} = {}, {} {}".format(average[-2], average[-1], average[-2] - average[-1],currentcount, mean(average)))
 	# Compare the current bright pixel count with the average
 	# pixel count in the window
-	if currentcount > (mean(average) + minPixelChange):
-		consecFrames = 0
-		updateConsecFrames = True
+	if currentcount > (mean(average) + min_pixel_delta):
+		consec_frames = 0
+		update_consec_frames = True
 		# Delete the pixel count from the trigger frame event,
 		# it modifies the average too much
 		average.pop()
@@ -184,7 +184,7 @@ while True:
 		cnts = imutils.grab_contours(cnts)
 		cv2.drawContours(frame, cnts, -1, (0,255,0), 1)
 		# Write to images the grouping of contiguous pixels
-		# cv2.imwrite("grouping_test_frame{}.png".format(str(capture.get(cv2.CAP_PROP_POS_FRAMES))), GroupPixels(th1))
+		# cv2.imwrite("./Grouped frames/grouping_test_frame{}.png".format(str(capture.get(cv2.CAP_PROP_POS_FRAMES))), GroupPixels(th1))
 		# if not already recording, start recording
 		if not kcw.recording:
 			# timestamp = datetime.datetime.now()
@@ -197,12 +197,12 @@ while True:
 	kcw.update(frame)
 	# if we are recording and reached a threshold on consecutive
 	# number of frames with no action, stop recording the clip
-	if kcw.recording and consecFrames == args["buffer_size"]:
+	if kcw.recording and consec_frames == args["buffer_size"]:
 		# print("stop recording at ", capture.get(cv2.CAP_PROP_POS_FRAMES))
 		# print("stop recording")
 		kcw.finish()
-		updateConsecFrames = False
-		consecFrames = 0
+		update_consec_frames = False
+		consec_frames = 0
 		# filter the stacked image and draw contours
 		brightmask = cv2.cvtColor(stacked_image, cv2.COLOR_BGR2GRAY)
 		brightmask = cv2.medianBlur(brightmask, 5)
@@ -220,7 +220,7 @@ while True:
 	# show the frame
 	cv2.imshow("Frame", frame)
 	# Pause video reproduction after a trigger event
-	# if currentcount > mean(average)+ minPixelChange:
+	# if currentcount > mean(average)+ min_pixel_delta:
 	# 	cv2.waitKey(-1)
 	# Escape video reproduction
 	keyboard = cv2.waitKey(30)
