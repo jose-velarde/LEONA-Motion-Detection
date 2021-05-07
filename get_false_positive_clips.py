@@ -3,6 +3,8 @@ import re
 import cv2
 import numpy as np
 
+# la reque
+
 regexfulldir = re.compile("(.*False positives.*avi$)")
 regexstation = re.compile(r"(.*?\\)(.*?)(\d+-\d+-\d+)(\\.*?)")
 rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
