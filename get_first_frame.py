@@ -1,21 +1,28 @@
 import os
 import cv2
 import re 
-
+from pprint import pprint
 
 def get_first_frame():
-	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 28-10-2019/Positives/Clips"
-	regexavi = re.compile("(.*avi$)")
+	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
+	# Look for unedited video clips
+	regexavi = re.compile("(.*)(Positives)(.*)(.*original.avi$)")
+	video_clip_list = []
 	for root, dirs, files in os.walk(rootdir):
 		for file in files:
-			if regexavi.match(file):
-				path = os.path.join(root,file)
-				capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(path))
-				capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
-				ret, frame = capture.read()
-				p = "{}/Time digits/{}.png".format(root, file[:-15])
-				cv2.imwrite(p, frame)
-				capture.release()
+			path = os.path.join(root,file)
+			string_match = regexavi.match(path)
+			if string_match:
+				# capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(path))
+				# capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+				# ret, frame = capture.read()
+				# p = "{}/Time digits/{}.png".format(root, file[:-15])
+				# cv2.imwrite(p, frame)
+				# capture.release()
+				video_clip_list.append(path)
+				print(string_match.group(1) + string_match.group(2))
+		# break
+	pprint(len(video_clip_list))
 
 def get_png_dirlist():
 	rootdir = "./Time digits"
@@ -28,5 +35,5 @@ def get_png_dirlist():
 				png_dirlist.append(os.path.join(root,file))
 	return png_dirlist
 
-# get_first_frame()
+get_first_frame()
 # print(get_png_dirlist())
