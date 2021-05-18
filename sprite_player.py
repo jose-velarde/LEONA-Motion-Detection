@@ -1,14 +1,15 @@
 import os
-import cv2
+import cv2													#pip install opencv-python
 import re 
 from pprint import pprint
-import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib
+import numpy as np											#pip install numpy
+from matplotlib import pyplot as plt						#pip install matplotlib
 from numpy.core.fromnumeric import size
 from numpy.core.shape_base import stack
 from numpy.lib.function_base import average
-from termcolor import colored
-from skimage import measure
+from termcolor import colored								#pip intall termcolor
+from skimage import measure									#pip install scikit-image
 from collections import deque
 from statistics import mean
 
