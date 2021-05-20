@@ -35,5 +35,26 @@ def get_png_dirlist():
 				png_dirlist.append(os.path.join(root,file))
 	return png_dirlist
 
-get_first_frame()
+def make_triggerframe_list():
+	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
+	# Look for unedited video clips
+	regexframe = re.compile("(.*)(Positives|False positives)(.)(\d+)(\.png$)")
+	triggerframe_list = []
+	for root, dirs, files in os.walk(rootdir):
+		for file in files:
+			path = os.path.join(root,file)
+			string_match = regexframe.match(path)
+			if string_match:
+				triggerframe_list.append(path)
+				# print(string_match.group(1) + string_match.group(2))
+			# print(path)
+	return triggerframe_list
+
+# get_first_frame()
 # print(get_png_dirlist())
+
+# framelist = make_triggerframe_list()
+
+# with open("triggerframe_list.txt", "w") as file:
+# 	for line in framelist:
+# 		file.write("{}\n".format(line))

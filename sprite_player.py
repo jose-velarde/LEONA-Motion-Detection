@@ -2,7 +2,6 @@ import os
 import cv2													#pip install opencv-python
 import re 
 from pprint import pprint
-import matplotlib
 import numpy as np											#pip install numpy
 from matplotlib import pyplot as plt						#pip install matplotlib
 from numpy.core.fromnumeric import size
