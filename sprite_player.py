@@ -132,35 +132,38 @@ video_index = 0
 kernel = np.ones((5,5),np.uint8)
 imode_flag = True
 
-threshold = 8
-mode = "mean"
+threshold = 40 #8
+mode = "bin"
 block = 5
-substract = 15
+substract = 10
 close = (10,2)
 open = (3,3)
 
 mode2 = "mean"
 block2 = 5
-substract2 = 15
+substract2 = 10
 close2 = 0
 open2 = 0
 
-n_rows = 4
-n_columns = 4
+n_rows = 1
+n_columns = 1
 
-min_delta = 60
+min_delta = 70
 window = 10
 
 count_stack= deque(maxlen = window)
 count_stack2 = deque(maxlen = window)
 count_stack3 = deque(maxlen = window)
 
+deinterlace_mode = "discard"
+# deinterlace_mode = "linear"
+
 while True:
 	# break_flag = True
 	break_flag = False
 	# calibration_flag = True
-	# absdiff_flag = True
-	absdiff_flag = False
+	absdiff_flag = True
+	# absdiff_flag = False
 	calibration_flag = False
 	# deinterlace_flag = True
 	deinterlace_flag = False
@@ -193,7 +196,7 @@ while True:
 		
 		#! DEINTERLACE FRAMES, mode = "discard" or mode = "linear"
 		if deinterlace_flag or colormap_flag:
-			first_field, second_field = deinterlace("discard", frame)
+			first_field, second_field = deinterlace(deinterlace_mode, frame)
 			# cv2.rectangle(first_field, (0, 420), (710,465), (0,0,0), -1)
 			# cv2.rectangle(second_field, (0, 420), (710,465), (0,0,0), -1)
 
@@ -270,7 +273,7 @@ while True:
 		colored1 = cv2.applyColorMap(colored1, cv2.COLORMAP_JET)
 		colored2 = cv2.applyColorMap(colored2, cv2.COLORMAP_JET)
 
-		clahe = cv2.createCLAHE(clipLimit=0.5, tileGridSize=(8,8))
+		clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(8,8))
 		equal11 = clahe.apply(first_field.copy())
 		equal22 = clahe.apply(second_field.copy())
 		equal11 = cv2.applyColorMap(equal11, cv2.COLORMAP_JET)
@@ -290,8 +293,8 @@ while True:
 		#! SHOW FRAMES
 		grid_th1 = th1.copy()
 		draw_grid(grid_th1, n_rows, n_columns)
-		# cv2.imshow("Frame", frame)
-		# cv2.imshow("th1", grid_th1)
+		cv2.imshow("Frame", frame)
+		cv2.imshow("th1", grid_th1)
 
 		# cv2.imshow("th3", equal1)
 
@@ -301,8 +304,8 @@ while True:
 		if colormap_flag:
 			cv2.imshow("th2", equal11)
 			cv2.imshow("th3", equal22)
-			cv2.imshow("Frame", colored2)
-			cv2.imshow("th1", colored1)
+			# cv2.imshow("Frame", colored2)
+			# cv2.imshow("th1", colored1)
 		#! BRIGHT PIXEL DELTA CALCULATION
 		delta = np.subtract(count, previous_count)
 		delta_total = sum(count) - sum(previous_count)
@@ -322,9 +325,11 @@ while True:
 			delta_total3 = sum(count3) - sum(previous_count3)
 		
 		for rows in range(n_rows):
+			print(" |".join(str(e).rjust(5) for e in count[rows*n_columns:(rows+1)*n_columns]), end = "")
+			print(colored("    ||", "red"), end = "")
 			print(" |".join(str(e).rjust(5) for e in delta[rows*n_columns:(rows+1)*n_columns]), end = "")
-			# print(colored("    ||", "red"), end = "")
-			# print(" |".join(str(e).rjust(5) for e in stack_mean[rows*n_columns:(rows+1)*n_columns]), end = "")
+			print(colored("    ||", "red"), end = "")
+			print(" |".join(str(e).rjust(5) for e in stack_mean[rows*n_columns:(rows+1)*n_columns]), end = "")
 
 			if deinterlace_flag:
 				print(colored("    ||", "red"), end = "")
@@ -368,14 +373,23 @@ while True:
 		if keyboard == 32:
 			pprint("Pause")
 			cv2.waitKey(-1)
-		if keyboard == 51:
-			pprint("Next file")
-			video_index += 1
-			break
+		# if keyboard == 52:
+		# 	pprint("Next frame")
+		# 	(capture.get(cv2.CAP_PROP_POS_FRAMES)+1)
+		# 	break
+		# if keyboard == 54:
+		# 	pprint("Previous frame")
+		# (capture.get(cv2.CAP_PROP_POS_FRAMES)-1)
+		# 	break
 		if keyboard == 49:
 			pprint("Previous file")
 			video_index -= 1
 			break
+		if keyboard == 51:
+			pprint("Next file")
+			video_index += 1
+			break
+
 		if keyboard == 27:
 			break_flag = True
 			break
