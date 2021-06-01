@@ -1,0 +1,21 @@
+{
+    "Raw File Name": "exported_boundaries_Acre.shp.zip", 
+    "Group": "Brazil", 
+    "License": "ODbL", 
+    "country": "Brazil", 
+    "Unnamed: 11": null, 
+    "Processed File Name": "BRA_ADM1.zip", 
+    "timestamp": 1534539069, 
+    "Known Errors": null, 
+    "datetime": "2018-08-17 16:51:09", 
+    "version": "1_3_3", 
+    "Unnamed: 12": null, 
+    "Source 2": "Wambacher (https://wambachers-osm.website/boundaries/)", 
+    "Source 1": "OpenStreetMap", 
+    "Year": 2017, 
+    "iso": "BRA", 
+    "adm": "ADM1", 
+    "Changes": "No", 
+    "Link to Source Data": null, 
+    "Boundary Level": "ADM 1"
+}
