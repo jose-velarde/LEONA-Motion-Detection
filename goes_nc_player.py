@@ -40,7 +40,7 @@ import cartopy.io.shapereader as shpreader
 # Required libraries ==================================================================================
 
 # Path to the GOES-R simulated image file
-path = '201910_nc\\S10635346_201910281600.nc'
+path = '.\\CPTEC data\\201910_nc\\S10635346_201910281600.nc'
 
 # Getting information from the file name ==============================================================
 # Search for the GOES-16 channel in the file name
