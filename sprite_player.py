@@ -13,9 +13,11 @@ from collections import deque
 from statistics import mean
 
 def get_sprites_list():
-	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
+	# rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
+	rootdir = "C:/Users/sauli/OneDrive/Desktop/Videos/Selected"
 	# Look for unedited video clips
-	regexavi = re.compile("(.*)(Positives)(.*)(.*original.avi$)")
+	# regexavi = re.compile("(.*)(Positives)(.*)(.*original.avi$)")
+	regexavi = re.compile("(.*.avi$)")
 	sprites_list = []
 	for root, dirs, files in os.walk(rootdir):
 		for file in files:
@@ -132,7 +134,7 @@ video_index = 0
 kernel = np.ones((5,5),np.uint8)
 imode_flag = True
 
-threshold = 40 #8
+threshold = 8 #8
 mode = "bin"
 block = 5
 substract = 10
@@ -149,7 +151,7 @@ n_rows = 1
 n_columns = 1
 
 min_delta = 70
-window = 10
+window = 15
 
 count_stack= deque(maxlen = window)
 count_stack2 = deque(maxlen = window)
@@ -173,6 +175,8 @@ while True:
 	labeling_flag = False
 	colormap_flag = True
 	# colormap_flag = False
+	if video_index == len(video_list):
+		video_index = 0
 	#! Start video file capture
 	pprint("Playing -> {}".format(video_list[video_index]), width=180)
 	capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video_list[video_index]))
@@ -328,8 +332,8 @@ while True:
 			print(" |".join(str(e).rjust(5) for e in count[rows*n_columns:(rows+1)*n_columns]), end = "")
 			print(colored("    ||", "red"), end = "")
 			print(" |".join(str(e).rjust(5) for e in delta[rows*n_columns:(rows+1)*n_columns]), end = "")
-			print(colored("    ||", "red"), end = "")
-			print(" |".join(str(e).rjust(5) for e in stack_mean[rows*n_columns:(rows+1)*n_columns]), end = "")
+			# print(colored("    ||", "red"), end = "")
+			# print(" |".join(str(e).rjust(5) for e in stack_mean[rows*n_columns:(rows+1)*n_columns]), end = "")
 
 			if deinterlace_flag:
 				print(colored("    ||", "red"), end = "")
@@ -339,10 +343,10 @@ while True:
 				print()
 			else:
 				print()
-		if deinterlace_flag:
-			print("---------- total: {}, {}, {} ----------".format(delta_total, delta_total2, delta_total3))
-		else:
-			print("---------- total: {} ----------".format(delta_total))
+		# if deinterlace_flag:
+		# 	print("---------- total: {}, {}, {} ----------".format(delta_total, delta_total2, delta_total3))
+		# else:
+		# 	print("---------- total: {} ----------".format(delta_total))
 		# Update previous data for next loop
 		previous_frame = current_frame.copy()
 		previous_sections = sections
@@ -356,8 +360,8 @@ while True:
 			previous_count3 = count3
 
 		if not deque_flag:
-			if any(pixel_diff > 50 for pixel_diff in delta):
-				print("Event triggered, press any key to continue", end = "")
+			if any(pixel_diff > 200 for pixel_diff in delta):
+				print("Event triggered, press any key to continue")
 				print(colored("DELTA MODE", "red"))
 				keyboard = cv2.waitKey(-1)
 		else:
