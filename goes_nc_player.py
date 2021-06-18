@@ -72,8 +72,8 @@ Title = " GOES-16 ABI CMI Band " + str(Band) + " " + Band_Wavelenght + " " + Uni
 nc = Dataset(path)
 
 # Choose the visualization extent (min lon, max lon, min lat, max lat)
-# extent = [-115.98, -25.01, -55.98, 34.98]
-extent = [-80, 0, -55.98, -20]
+extent = [-115.98, -25.01, -55.98, 34.98]
+# extent = [-80, 0, -55.98, -20]
 min_lon = extent[0]
 max_lon = extent[1]
 min_lat = extent[2]
@@ -129,7 +129,7 @@ img = ax.imshow(data, vmin=-80, vmax=40, origin='upper', extent=img_extent, cmap
 # Add a colorbar
 plt.colorbar(img, label='Brightness Temperature (°C)', extend='both', orientation='horizontal', pad=0.05, fraction=0.05)
 
-# print(nc.variables)
+print(nc.variables)
 
 # Insert the colorbar at the bottom
 	
