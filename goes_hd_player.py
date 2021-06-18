@@ -52,6 +52,9 @@ while True:
 		cv2.resizeWindow("cptec", int(height/5), int(width/5))
 		cv2.imshow("cptec", cptec)
 		keyboard = cv2.waitKey(1)
+		if keyboard == 32:
+			pprint("Pause")
+			cv2.waitKey(-1)
 		if keyboard == 27:
 			break_flag = True
 			break
