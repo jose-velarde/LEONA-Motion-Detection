@@ -3,7 +3,8 @@
 #	()(201910)(01|02|10|11|12|13|14|18|19|24|25|26|27|28|29|30|31)(16|17|18|19|20|21|22|23|00|01|02|03|04|05|06|07|08)()
 #   ()(201911)(01|02|03|04|07|08|09|10|11|12|13|14|16|17|18|19)(16|17|18|19|20|21|22|23|00|01|02|03|04|05|06|07|08)()
 #	()(201912)(02|03)()
-
+#	
+#	()(201910)(24|25|26|27|28|29|30|31)(09|10|11|12|13|14|15)()
 import cv2
 import os
 import re
@@ -13,7 +14,7 @@ from numpy import fabs
 
 # Get a the images corresponding to the night of the indicated date to the morning of the following day.
 def get_scan_list(month = "10", day= "2"):
-	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/2019" + month + "_HD"
+	rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/CPTEC data/2019" + month + "_HD"
 	if len(day) == 1:
 		day = "0" + day 
 	# Look for unedited video clips
@@ -28,8 +29,8 @@ def get_scan_list(month = "10", day= "2"):
 	return scan_list
 
 
-month = "10"
-day = "28"
+month = "11"
+day = "13"
 pprint(get_scan_list(month, day), width=180)
 
 scan_list = get_scan_list(month, day)
