@@ -1,23 +1,18 @@
 %% Matlab configuration
 % close all
-hold off;
+% hold off;
 beep off;
-set(0,'DefaultFigureWindowStyle','docked')
+% set(0,'DefaultFigureWindowStyle','docked')
 %% Define paths
 filepath_nc = 'C:/Users/sauli/Downloads/Soft_Tesis/OpenCV/CPTEC data/2019_nc/';
-filenames_nc = dir(filepath_nc);
-filename_nc = strcat(filepath_nc, filenames_nc(3).name);
+filenames_nc = dir(fullfile(filepath_nc, '*.nc'));
+files = {filenames_nc.name};
+path_nc = strcat(filepath_nc, files);
 filepath_shp = 'C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Shapefiles\';
 countries_shp = strcat(filepath_shp, 'ne_10m_admin_0_countries.shp');
 brstates_shp = strcat(filepath_shp, 'BRA_ADM1.shp');
 
-%% Load netcdf4 file into variables
-% Get the latitudes
-lats = ncread(filename_nc, 'lat');
-% Get the longitudes
-lons = ncread(filename_nc, 'lon')';
-% Extract the Brightness Temperature values from the NetCDF
-temp = ncread(filename_nc, 'Band1');
+
 
 %% Set the visualization extent (min lon, max lon, min lat, max lat)
 % extent = [-115.98  -25.01  -55.98  34.98];
@@ -29,17 +24,6 @@ max_lon = extent(2);
 min_lat = extent(3);
 max_lat = extent(4);
 
-%% Get corresponding index for extent values
-% latitude lower and upper index
-[latlv, latli] = min(abs(lats - extent(3)));
-[latuv, latui] = min(abs(lats - extent(4)));
-
-% longitude lower and upper index
-[lonlv, lonli] = min(abs(lons - extent(1)));
-[lonuv, lonui] = min(abs(lons - extent(2)));
-
-%% Flip the y axis, divide by 100 and subtract 273.15 to convert to celcius
-temp = flipud(rot90(temp))/ 100 - 273.15;
 
 %%  Set station coordinates
 %  SMS 		-29.442333, -53.821917
@@ -70,86 +54,93 @@ stations_lat = [...
     -15.555339,...
     -23.211277];
 
-%% Prepare Temperature Data
-% load less values for faster processing
-skip = 1;
-% load data within the set extent
-plottedTemp = temp(latli:skip:latui, lonli:skip:lonui);
-plottedLons = lons(lonli:skip:lonui);
-plottedLats = lats(latli:skip:latui);
-% Filter out temperatures
-% thresholdTemp = -66;
-% plottedTemp(plottedTemp > thresholdTemp) = NaN;
-%% Plot using the imagesc
-tic
-figure(2)
-
-hold on;
-imagesc(plottedLons, plottedLats, plottedTemp);
-gca
+%% declare everything that repeats in the foor loop
+fig = figure(1);
+ax = axes('Parent', fig);
+hold(ax, 'on');
 axis xy;
 axis equal;
-
-axis([lons(lonli), lons(lonui), lats(latli), lats(latui)]);
-set(gca,'xtick', -180:10:180, 'XGrid', 'on');
-set(gca,'ytick', -90:10:90, 'YGrid', 'on');
-set(gca, 'GridLineStyle', '--', 'GridColor', 'black', 'LineWidth', 1.5);
-gca
-plot(stations_lon, stations_lat, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'm')
-
-[cmin, cmax] = caxis;
-cmin = floor(abs(cmin));
-cmax = floor(cmax);
+set(ax, 'XGrid', 'on','xtick', -180:5:180, 'Layer','top');
+set(ax,'YGrid', 'on','ytick', -90:5:90);
+set(ax, 'GridLineStyle', '--', 'GridColor', 'magenta', 'LineWidth', 1, 'GridAlpha', 1);
+cmin = 90;
+cmax = 20;
 cm = colormap([jet(cmin); flipud(gray(cmax))]);
-
 cb = colorbar;
+caxis([-90 20 ]);
 ylabel(cb,'cloud top temperature (C)')
-title 'Title';
+%     cmin = 80;
+%     cmax = 30;
+%     cm = colormap([jet(cmin); flipud(gray(cmax))]);
+%     cb = colorbar;
+%     ylabel(cb,'cloud top temperature (C)')
 
-imagesc_time = toc
-
-%% Plot using the Mapping Toolbox (with outlined countries/states)
-
-% tic
-% fig = figure(1);
-% hold on
-%
-% set(fig, 'MenuBar', 'None', 'ToolBar', 'None');
-%
-% ax = axesm ('pcarree', 'Frame', 'on', 'Grid', 'on', 'MapLatLimit',[-55.98 -11], ...
-%     'MapLonLimit', [-79 -25.01], 'MLineLocation', 10,'PLineLocation', 10, ...
-%     'MeridianLabel', 'on', 'ParallelLabel', 'on', 'GColor', 'white');
-%
-% pcolorm(lats(latli:5:latui), lons(lonli:5:lonui),...
-%     temp(latli:5:latui, lonli:5:lonui));
-%
-% title 'Title';
-% axis off;
-% cm =colormap([jet(cmin); gray(cmax)]);
-%
-% cb = colorbar;
-% ylabel(cb,'cloud top temperature (C)')
-%
-% pcolorm_time = toc;
-% states = shaperead(brstates_shp,'UseGeoCoords',true);
-% geoshow([states.Lat], [states.Lon],'Color','white');
-% countries = shaperead(countries_shp,'UseGeoCoords',true);
-% geoshow([countries.Lat], [countries.Lon],'Color','magenta');
-% plotm(stations_lat, stations_lon, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'r')
-%
-% pcolorm_time = toc
-
-%% Implementation of old function to determine cloud area
-% T = [-66];
-% latarray = repmat(lats, 1, size(lons,2));
-% lonarray = repmat(lons, size(lats,1),1);
-% outimage = temp;
-% frow = lonli;
-% lrow = lonui;
-% fcol = latli;
-% lcol = latui;
-% 
-% [stormarea, cr] = n1ewtryareatemp(latarray, lonarray', outimage, frow, lrow, fcol, lcol, T(1));
+for file = path_nc
+    %% Process YYYYMMDD and HHMM
+%     match = regexp(file, '(.*)_(?<year>\d{4})(?<month>\d{2})(?<day>\d{2})(?<time>\d{4}).nc', 'names');
+    try
+        match = regexp(file, '(.*)_(?<year>\d{4})(?<month>\d{2})(?<day>27)(?<time>\d{4}).nc', 'names');
+    catch error
+        fprintf('Error: %s\n', error.message);
+        continue;
+    end
+    year = match{1}.year;
+    month = match{1}.month;
+    day = match{1}.day;
+    time = match{1}.time;
+    %% Load netcdf4 file into variables
+    % Get the latitudes
+    lats = ncread(char(file), 'lat');
+    % Get the longitudes
+    lons = ncread(char(file), 'lon')';
+    % Extract the Brightness Temperature values from the NetCDF
+    temp = ncread(char(file), 'Band1');
+    
+    %% Flip the y axis, divide by 100 and subtract 273.15 to convert to celcius
+    temp = flipud(rot90(temp))/ 100 - 273.15;
+    %% Mask data
+    temp(temp < -100) = NaN;
+    temp(temp > 20) = NaN;
+    
+    %% Get corresponding index for extent values
+    % latitude lower and upper index
+    [latlv, latli] = min(abs(lats - extent(3)));
+    [latuv, latui] = min(abs(lats - extent(4)));
+    
+    % longitude lower and upper index
+    [lonlv, lonli] = min(abs(lons - extent(1)));
+    [lonuv, lonui] = min(abs(lons - extent(2)));
+    
+    %% Prepare Temperature Data
+    % load less values for faster processing
+    skip = 5;
+    % load data within the set extent
+    plottedTemp = temp(latli:skip:latui, lonli:skip:lonui);
+    plottedLons = lons(lonli:skip:lonui);
+    plottedLats = lats(latli:skip:latui);
+    % Filter out temperatures
+    % thresholdTemp = -66;
+    % plottedTemp(plottedTemp > thresholdTemp) = NaN;
+    %% Plot using the imagesc
+    %     tic
+    axis([lons(lonli), lons(lonui), lats(latli), lats(latui)]);
+    
+    imagesc(plottedLons, plottedLats, plottedTemp);
+    plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'm')
+    text(extent(1)+3, extent(3)+3,[year, '/', month, '/', day,' - ', time], 'BackgroundColor', 'white')
+    %     [cmin, cmax] = caxis;
+    %     cmin = floor(abs(cmin));
+    %     cmax = floor(cmax);
+    %     cmin = 80;
+    %     cmax = 30;
+    %     cm = colormap([jet(cmin); flipud(gray(cmax))]);
+    %     cb = colorbar;
+    %     ylabel(cb,'cloud top temperature (C)')
+    
+    %     imagesc_time = toc;
+    pause(0.5);
+    %     break
+end
 %% Label isolated regions
 % need to set data as 0 or 1, 1 being pixels above the threshold
 thresholdTemp = -58;
@@ -209,6 +200,6 @@ contourData(contourData > -0) = NaN;
 values = [thresholdTemp -80];
 
 % plot the contour
-[C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on');
+% [C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on');
 % clabel(C,h);
 
