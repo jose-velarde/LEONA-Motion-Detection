@@ -16,13 +16,12 @@ brstates_shp = strcat(filepath_shp, 'BRA_ADM1.shp');
 
 %% Set the visualization extent (min lon, max lon, min lat, max lat)
 % extent = [-115.98  -25.01  -55.98  34.98];
-extent = [-79, -30.01, -50.98, -11];
-% extent = [-60, -51, -40, -31];
+% extent = [-79, -30.01, -50.98, -11];
 
-min_lon = extent(1);
-max_lon = extent(2);
-min_lat = extent(3);
-max_lat = extent(4);
+min_lon = -75;
+max_lon = -45;
+min_lat = -40;
+max_lat = -25;
 
 
 %%  Set station coordinates
@@ -63,31 +62,28 @@ axis equal;
 set(ax, 'XGrid', 'on','xtick', -180:5:180, 'Layer','top');
 set(ax,'YGrid', 'on','ytick', -90:5:90);
 set(ax, 'GridLineStyle', '--', 'GridColor', 'magenta', 'LineWidth', 1, 'GridAlpha', 1);
-cmin = 90;
+cmin = 85;
 cmax = 20;
-cm = colormap([jet(cmin); flipud(gray(cmax))]);
+% custom_cm = colormap(hot);
+cm = colormap([jet(cmin/5); flipud(gray(cmax/5))]);
 cb = colorbar;
-caxis([-90 20 ]);
+caxis([-(cmin) cmax ]);
 ylabel(cb,'cloud top temperature (C)')
-%     cmin = 80;
-%     cmax = 30;
-%     cm = colormap([jet(cmin); flipud(gray(cmax))]);
-%     cb = colorbar;
-%     ylabel(cb,'cloud top temperature (C)')
 
-for file = path_nc
-    %% Process YYYYMMDD and HHMM
-%     match = regexp(file, '(.*)_(?<year>\d{4})(?<month>\d{2})(?<day>\d{2})(?<time>\d{4}).nc', 'names');
-    try
-        match = regexp(file, '(.*)_(?<year>\d{4})(?<month>\d{2})(?<day>27)(?<time>\d{4}).nc', 'names');
-    catch error
-        fprintf('Error: %s\n', error.message);
-        continue;
+YYYY = '2019';
+DD = '28';
+MM = '10';
+hh = '18';
+mm = '00';
+ss = '00';
+
+% while(1)
+    %% Format filename and check if exists
+    file = strcat(filepath_nc, 'S10635346_', YYYY,MM,DD,hh,mm,'.nc');
+    if ~ismember(file, path_nc)
+        [DD, hh, mm] = addMinutes(DD, hh, mm, 10);
+        continue
     end
-    year = match{1}.year;
-    month = match{1}.month;
-    day = match{1}.day;
-    time = match{1}.time;
     %% Load netcdf4 file into variables
     % Get the latitudes
     lats = ncread(char(file), 'lat');
@@ -99,107 +95,103 @@ for file = path_nc
     %% Flip the y axis, divide by 100 and subtract 273.15 to convert to celcius
     temp = flipud(rot90(temp))/ 100 - 273.15;
     %% Mask data
-    temp(temp < -100) = NaN;
+    temp(temp < -85) = NaN;
     temp(temp > 20) = NaN;
     
     %% Get corresponding index for extent values
     % latitude lower and upper index
-    [latlv, latli] = min(abs(lats - extent(3)));
-    [latuv, latui] = min(abs(lats - extent(4)));
+    [latlv, latli] = min(abs(lats - min_lat));
+    [latuv, latui] = min(abs(lats - max_lat));
     
     % longitude lower and upper index
-    [lonlv, lonli] = min(abs(lons - extent(1)));
-    [lonuv, lonui] = min(abs(lons - extent(2)));
+    [lonlv, lonli] = min(abs(lons - min_lon));
+    [lonuv, lonui] = min(abs(lons - max_lon));
     
     %% Prepare Temperature Data
     % load less values for faster processing
-    skip = 5;
+    skip = 1;
     % load data within the set extent
     plottedTemp = temp(latli:skip:latui, lonli:skip:lonui);
     plottedLons = lons(lonli:skip:lonui);
     plottedLats = lats(latli:skip:latui);
     % Filter out temperatures
-    % thresholdTemp = -66;
-    % plottedTemp(plottedTemp > thresholdTemp) = NaN;
+    thresholdTemp = -56;
+%     plottedTemp(plottedTemp > thresholdTemp) = NaN;
     %% Plot using the imagesc
-    %     tic
     axis([lons(lonli), lons(lonui), lats(latli), lats(latui)]);
     
     imagesc(plottedLons, plottedLats, plottedTemp);
-    plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'm')
-    text(extent(1)+3, extent(3)+3,[year, '/', month, '/', day,' - ', time], 'BackgroundColor', 'white')
-    %     [cmin, cmax] = caxis;
-    %     cmin = floor(abs(cmin));
-    %     cmax = floor(cmax);
-    %     cmin = 80;
-    %     cmax = 30;
-    %     cm = colormap([jet(cmin); flipud(gray(cmax))]);
-    %     cb = colorbar;
-    %     ylabel(cb,'cloud top temperature (C)')
+    %% Contour plot
+    contourData = temp(latli:skip:latui, lonli:skip:lonui);
+    % mask data to not show in the contour
+    contourData(contourData > -0) = NaN;
+    % Set contour bands
+    % values = [-46 -52 -58 -64 -70 -76 -80];
+    values = [thresholdTemp -66 -72 -76 -85];
+%     values = [thresholdTemp -80];
     
-    %     imagesc_time = toc;
+    % plot the contour
+%     [C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on','ShowText','on');
+    [C,h] = contourf(plottedLons,plottedLats,contourData, values);
+
+
+%     clabel(C, 'manual');
+    plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 15,'MarkerFaceColor', 'm')
+    text(min_lon+3, min_lat+3,[YYYY, '/', MM, '/', DD,' - ', hh, ':', mm], 'BackgroundColor', 'white', 'FontSize', 15)
+    
+    
     pause(0.5);
-    %     break
-end
-%% Label isolated regions
-% need to set data as 0 or 1, 1 being pixels above the threshold
-thresholdTemp = -58;
-plottedTemp(plottedTemp > thresholdTemp) = 0;
-plottedTemp(plottedTemp < thresholdTemp) = 1;
-tic
-% Matrix L contains isolated regions
-L = bwlabel(plottedTemp,4);
-
-% CC = bwconncomp(plottedTemp)
-% stats = regionprops(CC, 'basic')
-% L = labelmatrix(CC)
-% Ignore small areas
-minPixelArea = 1000;
-for group = 1 : length(unique(L))
-    if nnz(L==group) < minPixelArea
-        L(L==group)=0;
-    end
-end
-
-isolatedRegions = unique(L);
-isolatedRegions = isolatedRegions(2:end);
-for nRegion = isolatedRegions'
-    % find all the pixels of the n region:
-    [r,c] = find(L==nRegion);
-    % [lat,lon]
-    rc = [r c];
-    dArea = 0;
-    for index = 1 : size(rc)
-        % get distance from [lat(i) lon(i)] to [lat(i+1) lon(i)]
-        dlat = haversineDist(...
-            plottedLats(rc(index,1),1),...
-            plottedLons(1,rc(index,2)),...
-            plottedLats(rc(index,1)-1,1),...
-            plottedLons(1,rc(index,2)));
-        % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
-        dlon = haversineDist(...
-            plottedLats(rc(index,1),1),...
-            plottedLons(1,rc(index,2)),...
-            plottedLats(rc(index,1),1),...
-            plottedLons(1,rc(index,2)+1));
-        % calculate current pixel area as the product between deltas
-        % add each pixel area to the isolated region area
-        dArea = dArea + dlat*dlon;
-    end
-    %     fprintf('Region: %3d , Area: %6.0f km2, Pixels: \n',nRegion, dArea)
-    fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
-end
-isolatedCalc = toc
-%% Contour plot
-contourData = temp(latli:skip:latui, lonli:skip:lonui);
-% mask data to not show in the contour
-contourData(contourData > -0) = NaN;
-% Set contour bands
-% values = [-46 -52 -58 -64 -70 -76 -80];
-% values = [-46 -56 -66 -76];
-values = [thresholdTemp -80];
-
-% plot the contour
-% [C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on');
-% clabel(C,h);
+    [DD, hh, mm] = addMinutes(DD, hh, mm, 10);
+    % end
+    %% Label isolated regions
+%     % need to set data as 0 or 1, 1 being pixels above the threshold
+%     thresholdTemp = -58;
+%     plottedTemp(plottedTemp > thresholdTemp) = 0;
+%     plottedTemp(plottedTemp < thresholdTemp) = 1;
+%     tic
+%     % Matrix L contains isolated regions
+%     L = bwlabel(plottedTemp,4);
+%     
+%     % CC = bwconncomp(plottedTemp)
+%     % stats = regionprops(CC, 'basic')
+%     % L = labelmatrix(CC)
+%     % Ignore small areas
+%     minPixelArea = 1000;
+%     for group = 1 : length(unique(L))
+%         if nnz(L==group) < minPixelArea
+%             L(L==group)=0;
+%         end
+%     end
+%     
+%     isolatedRegions = unique(L);
+%     isolatedRegions = isolatedRegions(2:end);
+%     for nRegion = isolatedRegions'
+%         % find all the pixels of the n region:
+%         [r,c] = find(L==nRegion);
+%         % [lat,lon]
+%         rc = [r c];
+%         dArea = 0;
+%         for index = 1 : size(rc)
+%             % get distance from [lat(i) lon(i)] to [lat(i+1) lon(i)]
+%             dlat = haversineDist(...
+%                 plottedLats(rc(index,1),1),...
+%                 plottedLons(1,rc(index,2)),...
+%                 plottedLats(rc(index,1)-1,1),...
+%                 plottedLons(1,rc(index,2)));
+%             % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
+%             dlon = haversineDist(...
+%                 plottedLats(rc(index,1),1),...
+%                 plottedLons(1,rc(index,2)),...
+%                 plottedLats(rc(index,1),1),...
+%                 plottedLons(1,rc(index,2)+1));
+%             % calculate current pixel area as the product between deltas
+%             % add each pixel area to the isolated region area
+%             dArea = dArea + dlat*dlon;
+%         end
+%         %     fprintf('Region: %3d , Area: %6.0f km2, Pixels: \n',nRegion, dArea)
+%         fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
+%         
+%     end
+%     isolatedCalc = toc
+% end
 
