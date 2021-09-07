@@ -1,4 +1,4 @@
-function [DD, hh, mm] = addMinutes(DD, hh, mm, minutes)
+function [MM, DD, hh, mm] = addMinutes(MM, DD, hh, mm, minutes)
     mm = str2num(mm) + minutes;
     if mm == 60
         mm = '00';
@@ -11,6 +11,10 @@ function [DD, hh, mm] = addMinutes(DD, hh, mm, minutes)
             DD =  num2str(str2num(DD) + 1);
             if size(DD) == 1
                 DD = strcat('0', DD);
+            end
+            if DD == '31'
+                DD = '01';
+                MM = '12';
             end
         end
     else

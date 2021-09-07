@@ -2,7 +2,7 @@
 % close all
 hold off;
 beep off;
-set(0,'DefaultFigureWindowStyle','docked')
+% set(0,'DefaultFigureWindowStyle','docked')
 %% Define paths
 filepath_nc = 'C:/Users/sauli/Downloads/Soft_Tesis/OpenCV/CPTEC data/2019_nc/';
 filenames_nc = dir(filepath_nc);
@@ -97,13 +97,13 @@ set(gca, 'GridLineStyle', '--', 'GridColor', 'black', 'LineWidth', 1.5);
 gca
 plot(stations_lon, stations_lat, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'm')
 
-[cmin, cmax] = caxis;
-cmin = floor(abs(cmin));
-cmax = floor(cmax);
-cm = colormap([jet(cmin); flipud(gray(cmax))]);
-
-cb = colorbar;
-ylabel(cb,'cloud top temperature (C)')
+% [cmin, cmax] = caxis;
+% cmin = floor(abs(cmin));
+% cmax = floor(cmax);
+% cm = colormap([jet(cmin); flipud(gray(cmax))]);
+% 
+% cb = colorbar;
+% ylabel(cb,'cloud top temperature (C)')
 title 'Title';
 
 imagesc_time = toc
@@ -120,8 +120,8 @@ imagesc_time = toc
 %     'MapLonLimit', [-79 -25.01], 'MLineLocation', 10,'PLineLocation', 10, ...
 %     'MeridianLabel', 'on', 'ParallelLabel', 'on', 'GColor', 'white');
 %
-% pcolorm(lats(latli:5:latui), lons(lonli:5:lonui),...
-%     temp(latli:5:latui, lonli:5:lonui));
+% % pcolorm(lats(latli:5:latui), lons(lonli:5:lonui),...
+% %     temp(latli:5:latui, lonli:5:lonui));
 %
 % title 'Title';
 % axis off;
@@ -131,11 +131,11 @@ imagesc_time = toc
 % ylabel(cb,'cloud top temperature (C)')
 %
 % pcolorm_time = toc;
-% states = shaperead(brstates_shp,'UseGeoCoords',true);
-% geoshow([states.Lat], [states.Lon],'Color','white');
-% countries = shaperead(countries_shp,'UseGeoCoords',true);
-% geoshow([countries.Lat], [countries.Lon],'Color','magenta');
-% plotm(stations_lat, stations_lon, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'r')
+states = shaperead(brstates_shp,'UseGeoCoords',true);
+geoshow([states.Lat], [states.Lon],'Color','white');
+countries = shaperead(countries_shp,'UseGeoCoords',true);
+geoshow([countries.Lat], [countries.Lon],'Color','magenta');
+% plot(stations_lat, stations_lon, 'pblack', 'MarkerSize', 10,'MarkerFaceColor', 'r')
 %
 % pcolorm_time = toc
 
