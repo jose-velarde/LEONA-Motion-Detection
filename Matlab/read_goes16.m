@@ -81,7 +81,7 @@ ss = '00';
     %% Format filename and check if exists
     file = strcat(filepath_nc, 'S10635346_', YYYY,MM,DD,hh,mm,'.nc');
     if ~ismember(file, path_nc)
-        [DD, hh, mm] = addMinutes(DD, hh, mm, 10);
+        [MM, DD, hh, mm] = addMinutes(MM, DD, hh, mm, 10);
         continue
     end
     %% Load netcdf4 file into variables
@@ -115,7 +115,7 @@ ss = '00';
     plottedLons = lons(lonli:skip:lonui);
     plottedLats = lats(latli:skip:latui);
     % Filter out temperatures
-    thresholdTemp = -56;
+    thresholdTemp = -68;
 %     plottedTemp(plottedTemp > thresholdTemp) = NaN;
     %% Plot using the imagesc
     axis([lons(lonli), lons(lonui), lats(latli), lats(latui)]);
@@ -127,8 +127,8 @@ ss = '00';
     contourData(contourData > -0) = NaN;
     % Set contour bands
     % values = [-46 -52 -58 -64 -70 -76 -80];
-    values = [thresholdTemp -66 -72 -76 -85];
-%     values = [thresholdTemp -80];
+%     values = [thresholdTemp -66 -72 -76 -85];
+    values = [thresholdTemp -80];
     
     % plot the contour
 %     [C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on','ShowText','on');
@@ -141,30 +141,30 @@ ss = '00';
     
     
     pause(0.5);
-    [DD, hh, mm] = addMinutes(DD, hh, mm, 10);
+    [MM, DD, hh, mm] = addMinutes(MM, DD, hh, mm, 10);
     % end
     %% Label isolated regions
-%     % need to set data as 0 or 1, 1 being pixels above the threshold
-%     thresholdTemp = -58;
-%     plottedTemp(plottedTemp > thresholdTemp) = 0;
-%     plottedTemp(plottedTemp < thresholdTemp) = 1;
-%     tic
-%     % Matrix L contains isolated regions
-%     L = bwlabel(plottedTemp,4);
-%     
-%     % CC = bwconncomp(plottedTemp)
-%     % stats = regionprops(CC, 'basic')
-%     % L = labelmatrix(CC)
-%     % Ignore small areas
-%     minPixelArea = 1000;
-%     for group = 1 : length(unique(L))
-%         if nnz(L==group) < minPixelArea
-%             L(L==group)=0;
-%         end
-%     end
-%     
-%     isolatedRegions = unique(L);
-%     isolatedRegions = isolatedRegions(2:end);
+    % need to set data as 0 or 1, 1 being pixels above the threshold
+    thresholdTemp = -68;
+    plottedTemp(plottedTemp > thresholdTemp) = 0;
+    plottedTemp(plottedTemp < thresholdTemp) = 1;
+    tic
+    % Matrix L contains isolated regions
+    L = bwlabel(plottedTemp,4);
+    
+%     CC = bwconncomp(plottedTemp);
+%     stats = regionprops(CC, 'basic');
+%     L = labelmatrix(CC);
+    % Ignore small areas
+    minPixelArea = 150;
+    for group = 1 : length(unique(L))
+        if nnz(L==group) < minPixelArea
+            L(L==group)=0;
+        end
+    end
+    
+    isolatedRegions = unique(L);
+    isolatedRegions = isolatedRegions(2:end);
 %     for nRegion = isolatedRegions'
 %         % find all the pixels of the n region:
 %         [r,c] = find(L==nRegion);
@@ -176,7 +176,7 @@ ss = '00';
 %             dlat = haversineDist(...
 %                 plottedLats(rc(index,1),1),...
 %                 plottedLons(1,rc(index,2)),...
-%                 plottedLats(rc(index,1)-1,1),...
+%                 plottedLats(rc(index,1)+1,1),...
 %                 plottedLons(1,rc(index,2)));
 %             % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
 %             dlon = haversineDist(...
@@ -192,6 +192,6 @@ ss = '00';
 %         fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
 %         
 %     end
-%     isolatedCalc = toc
+    isolatedCalc = toc
 % end
 
