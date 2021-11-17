@@ -165,33 +165,33 @@ ss = '00';
     
     isolatedRegions = unique(L);
     isolatedRegions = isolatedRegions(2:end);
-%     for nRegion = isolatedRegions'
-%         % find all the pixels of the n region:
-%         [r,c] = find(L==nRegion);
-%         % [lat,lon]
-%         rc = [r c];
-%         dArea = 0;
-%         for index = 1 : size(rc)
-%             % get distance from [lat(i) lon(i)] to [lat(i+1) lon(i)]
-%             dlat = haversineDist(...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)),...
-%                 plottedLats(rc(index,1)+1,1),...
-%                 plottedLons(1,rc(index,2)));
-%             % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
-%             dlon = haversineDist(...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)),...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)+1));
-%             % calculate current pixel area as the product between deltas
-%             % add each pixel area to the isolated region area
-%             dArea = dArea + dlat*dlon;
-%         end
-%         %     fprintf('Region: %3d , Area: %6.0f km2, Pixels: \n',nRegion, dArea)
-%         fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
-%         
-%     end
+    for nRegion = isolatedRegions'
+        % find all the pixels of the n region:
+        [r,c] = find(L==nRegion);
+        % [lat,lon]
+        rc = [r c];
+        dArea = 0;
+        for index = 1 : size(rc)
+            % get distance from [lat(i) lon(i)] to [lat(i+1) lon(i)]
+            dlat = haversineDist(...
+                plottedLats(rc(index,1),1),...
+                plottedLons(1,rc(index,2)),...
+                plottedLats(rc(index,1)+1,1),...
+                plottedLons(1,rc(index,2)));
+            % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
+            dlon = haversineDist(...
+                plottedLats(rc(index,1),1),...
+                plottedLons(1,rc(index,2)),...
+                plottedLats(rc(index,1),1),...
+                plottedLons(1,rc(index,2)+1));
+            % calculate current pixel area as the product between deltas
+            % add each pixel area to the isolated region area
+            dArea = dArea + dlat*dlon;
+        end
+        %     fprintf('Region: %3d , Area: %6.0f km2, Pixels: \n',nRegion, dArea)
+        fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
+        
+    end
     isolatedCalc = toc
 % end
 

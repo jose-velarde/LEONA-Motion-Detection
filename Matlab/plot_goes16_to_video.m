@@ -7,8 +7,8 @@ warning('off');
 
 % set(0,'DefaultFigureWindowStyle','docked')
 %% Helper functions
-isAfter = @(currentDay, currentHour, currentMinute, startDay, startHour, startMinute) (str2double(strcat(startDay, startHour, startMinute)) <= str2double(strcat(currentDay, currentHour, currentMinute)));
-isBefore = @(currentDay, currentHour, currentMinute, endDay, endHour, endMinute) (str2double(strcat(endDay, endHour, endMinute)) >= str2double(strcat(currentDay, currentHour, currentMinute)));
+isAfter = @(currentYear, currentMonth, currentDay, currentHour, currentMinute, startYear, startMonth, startDay, startHour, startMinute) (str2double(strcat(startYear, startMonth, startDay, startHour, startMinute)) <= str2double(strcat(currentYear, currentMonth, currentDay, currentHour, currentMinute)));
+isBefore = @(currentYear, currentMonth, currentDay, currentHour, currentMinute, endYear, endMonth, endDay, endHour, endMinute) (str2double(strcat(endYear, endMonth, endDay, endHour, endMinute)) >= str2double(strcat(currentYear, currentMonth, currentDay, currentHour, currentMinute)));
 
 %%  Set station coordinates
 %  SMS 		-29.442333, -53.821917
@@ -72,6 +72,7 @@ Countries = geoshow([countries.Lat], [countries.Lon],'Color','white', 'LineWidth
 %% Plot LEONA station markers
 Stations = plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 15,'MarkerFaceColor', 'm');
 
+%% BrasilDat range                            7N -> 40S 77W -> 31W
 %%  10/12/2018  16:00 ->    15/12/2018 08:00 20S -> 45S 70W -> 35W
 %%  26/10/2019  19:00 ->    30/10/2019 00:00 20S -> 40S 70W -> 25W
 
@@ -175,142 +176,144 @@ while(1)
     %% Plot camera observation lines
     %% Night (1): 05:00 -> 06:00 150 Anillaco 2
     % Night (1): 06:00 -> 08:00 155 Anillaco
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%         
-%     if isAfter(DD{index}, hh{index}, mm{index}, DD{index}, '05', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, DD{index}, '06','00')
-%         azimuth = 150;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     
-%     if isAfter(DD{index}, hh{index}, mm{index}, DD{index}, '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, DD{index}, '08','00')
-%         azimuth = 155;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 10 ;   % 1 degree ~110km
+        
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '14', '05', '00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '14', '06','00')
+        azimuth = 150;
+        plot_fov(origin, azimuth, radius);
+    end
+    
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '14', '06','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '14', '08','00')
+        azimuth = 155;
+        plot_fov(origin, azimuth, radius);
+    end
     %% Night (2): 01:00 -> 04:00 195 SMS 1
     % Night (2): 04:00 -> 08:00 180 SMS
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%         
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '01', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '04','00')
-%         azimuth = 195;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '04','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '08','00')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+        
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '02', '01', '00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '02', '04','00')
+        azimuth = 195;
+        plot_fov(origin, azimuth, radius);
+    end
+    
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '02', '04','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '11', '02', '08','00')
+        azimuth = 180;
+        plot_fov(origin, azimuth, radius);
+    end
     %% Night (3) - SMS 1
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (3): 23:00 -> 01:00 180 SMS 1
-%     if isAfter(DD{index}, hh{index}, mm{index}, '28', '23', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '01','00')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 01:00 -> 02:00 160 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '01','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '02','00')
-%         azimuth = 160;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 02:00 -> 02:30 180 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '02','30')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 02:30 -> 05:00 190 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '02','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '05','00')
-%         azimuth = 190;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 05:00 -> 08:30 235 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '08','30')
-%         azimuth = 235;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3) - La Maria 3
-%     origin = [stations_lon(3), stations_lat(3)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (3): 04:00 -> 06:00 130 La Maria 3
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '04', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '06','00')
-%         azimuth = 130;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 06:00 -> 08:30 120 La Maria
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '08','30')
-%         azimuth = 120;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (3): 23:00 -> 01:00 180 SMS 1
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '28', '23', '00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '01','00')
+        azimuth = 180;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3): 01:00 -> 02:00 160 SMS
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '01','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '02','00')
+        azimuth = 160;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3): 02:00 -> 02:30 180 SMS
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '02','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '02','30')
+        azimuth = 180;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3): 02:30 -> 05:00 190 SMS
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '02','30')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '05','00')
+        azimuth = 190;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3): 05:00 -> 08:30 235 SMS
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '05','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '08','30')
+        azimuth = 235;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3) - La Maria 3
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (3): 04:00 -> 06:00 130 La Maria 3
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '04', '00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '06','00')
+        azimuth = 130;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (3): 06:00 -> 08:30 120 La Maria
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '06','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '29', '08','30')
+        azimuth = 120;
+        plot_fov(origin, azimuth, radius);
+    end
     %% Night (4): 250 SMS 1
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (4): 00:30 -> 01:30 250 SMS 1
-%     if isAfter(DD{index}, hh{index}, mm{index}, '27', '00','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '27', '01','30')
-%         azimuth = 250;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (4): 00:30 -> 01:30 250 SMS 1
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '27', '00','30')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '27', '01','30')
+        azimuth = 250;
+        plot_fov(origin, azimuth, radius);
+    end
 
-    %% Night (5): La Maria 3
-%     origin = [stations_lon(3), stations_lat(3)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (5): 05:00 -> 06:00 90 La Maria 3
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '06','00')
-%         azimuth = 90;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    % Night (5): La Maria 3
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (5): 05:00 -> 06:00 90 La Maria 3
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '02', '05','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2019', '10', '02', '06','00')
+        azimuth = 90;
+        plot_fov(origin, azimuth, radius);
+    end
     %% Night (6): Anillaco 2
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (6): 02:00 -> 05:00 125 Anillaco 
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '05','00')
-%         azimuth = 125;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 05:00 -> 06:00 140 Anillaco
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '06','00')
-%         azimuth = 140;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 06:00 -> 07:30 130 Anillaco
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '07','30')
-%         azimuth = 130;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 06:30 -> 06:45 180 La Maria
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '06','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '06','45')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (6): 02:00 -> 05:00 125 Anillaco 
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '02','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '05','00')
+        azimuth = 125;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (6): 05:00 -> 06:00 140 Anillaco
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '05','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '06','00')
+        azimuth = 140;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (6): 06:00 -> 07:30 130 Anillaco
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '06','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '07','30')
+        azimuth = 130;
+        plot_fov(origin, azimuth, radius);
+    end
+    % Night (6): 06:30 -> 06:45 180 La Maria 3
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 10 ;   % 1 degree ~110km
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '06','30')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '14', '06','45')
+        azimuth = 180;
+        plot_fov(origin, azimuth, radius);
+    end
 
     %% Night (7): Anillaco
 
     %% Night (8): Anillaco 2
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (8): 02:00 -> 03:30 190 Anillaco 2
-%     if isAfter(DD{index}, hh{index}, mm{index}, '01', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '01', '03','30')
-%         azimuth = 190;
-%         plot_fov(origin, azimuth, radius);
-%     end
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 10 ;   % 1 degree ~110km
+    % Night (8): 02:00 -> 03:30 190 Anillaco 2
+    if isAfter(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '01', '02','00')...
+        && isBefore(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}, '2018', '12', '01', '03','30')
+        azimuth = 190;
+        plot_fov(origin, azimuth, radius);
+    end
 
     %% Night (9): Anillaco
 

@@ -1,5 +1,5 @@
 
-function [pixarea, k, listpix, kp] = newtryneighboors(pixarea, k, listpix, kp, outtemp, rc, T)
+function [pixarea, k, listpix, kp] = newtryneighboors_record(pixarea, k, listpix, kp, outtemp, rc, T, lons, lats, fig, writerObj)
 
 % neighboors checks all neighboors around pixel with position rc.
 
@@ -27,6 +27,13 @@ for kr=r-1:r+1
         value = intersect2(pixarea, rc, 'rows');        % ck if pixarea = rc
         if isempty(value)& outtemp(kr,kc) <= T           
             pixarea(k,:) = [kr kc];
+            plot(lons(pixarea(k,2)), lats(pixarea(k,1)),'.k', 'Color', 'black');
+            frame = getframe(fig);
+            try
+                writeVideo(writerObj,frame);
+            catch
+            end
+            pause(0.0001)
             listpix(kp,:) = [kr kc];
             k = k+1;
             kp = kp+1;

@@ -1,14 +1,7 @@
 %% Matlab configuration
-% close all
-% hold off;
 beep off;
 warning('off');
-
-% set(0,'DefaultFigureWindowStyle','docked')
-%% Helper functions
-isAfter = @(currentDay, currentHour, currentMinute, startDay, startHour, startMinute) (str2double(strcat(startDay, startHour, startMinute)) <= str2double(strcat(currentDay, currentHour, currentMinute)));
-isBefore = @(currentDay, currentHour, currentMinute, endDay, endHour, endMinute) (str2double(strcat(endDay, endHour, endMinute)) >= str2double(strcat(currentDay, currentHour, currentMinute)));
-
+clear all
 %%  Set station coordinates
 %  SMS 		-29.442333, -53.821917
 %  Anillaco 	-28.812507, -66.937308
@@ -38,16 +31,18 @@ stations_lat = [...
     -15.555339,...
     -23.211277];
 
-%% set figure
+%% Set up figure
 scrsz = get(groot,'ScreenSize');
 fig = figure('Position',[1 scrsz(4)*1/5 scrsz(3)*2/3 scrsz(4)*2/3]);
 
-ax = axes('Parent', fig);
+ax = axes('Parent', fig, 'FontSize',16);
 hold(ax, 'on');
 axis xy;
 axis equal;
 set(ax,'xtick', -180:5:180, 'Layer','top');
 set(ax,'ytick', -90:5:90);
+xlabel(ax, 'Longitude (C)', 'FontSize', 16);
+ylabel(ax, 'Latitude (C)', 'FontSize', 16);
 % set(ax, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', '--', 'GridColor', 'white', 'LineWidth', 0.1, 'GridAlpha', 1);
 %% Define colormap and colorbar
 cmin = 80;
@@ -55,10 +50,11 @@ cmax = 20;
 % custom_cm = colormap(hot);
 % grayColormap = flipud(gray);
 % grayColormap = grayColormap(21:40,1:3);
-cm = colormap([jet(cmin-20); flipud(gray(cmax+20))]);
+cm = colormap([jet(cmin); flipud(gray(cmax))]);
 cb = colorbar;
 caxis([-(cmin) cmax ]);
-ylabel(cb,'cloud top temperature (C)')
+caxis('manual')
+title(cb,'Cloud top temperature (C)')
 %% Plot coastlines
 filepath_shp = 'C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Shapefiles\';
 countries_shp = strcat(filepath_shp, 'ne_10m_admin_0_countries.shp');
@@ -71,6 +67,7 @@ Countries = geoshow([countries.Lat], [countries.Lon],'Color','white', 'LineWidth
 %% Plot LEONA station markers
 Stations = plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 15,'MarkerFaceColor', 'm');
 
+%% BrasilDat range                            7N -> 40S 77W -> 31W
 %%  10/12/2018  16:00 ->    15/12/2018 08:00 20S -> 45S 70W -> 35W
 %%  26/10/2019  19:00 ->    30/10/2019 00:00 20S -> 40S 70W -> 25W
 
@@ -102,11 +99,11 @@ hh      = {'15'  ,'21'  ,'13'  ,'19'  ,'04'  ,'01'  ,'16'  ,'09'  ,'16'  };
 mm      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
 ss      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
 DDEnd   = {'14'  ,'03'  ,'31'  ,'29'  ,'03'  ,'15'  ,'13'  ,'01'  ,'27'  };
-hhEnd   = {'22'  ,'14'  ,'00'  ,'05'  ,'00'  ,'08'  ,'05'  ,'20'  ,'11'  };
+hhEnd   = {'22'  ,'14'  ,'00'  ,'05'  ,'00'  ,'08'  ,'05'  ,'23'  ,'11'  };
 mmEnd   = {'10'  ,'10'  ,'10'  ,'10'  ,'10'  ,'15'  ,'15'  ,'15'  ,'15'  };
 night   = { 1    , 2    , 3    , 4    , 5    ,  6   , 7    , 8    , 9    };
 %% OBSERVATION NIGHT %%
-index = 9;
+index = 1;
 
 %% Define .nc files path
 filepath_nc = strcat('C:/Users/sauli/Downloads/Soft_Tesis/OpenCV/CPTEC data/', YYYY{index},'_nc/');
@@ -114,272 +111,182 @@ filenames_nc = dir(fullfile(filepath_nc, '*.nc'));
 files = {filenames_nc.name};
 path_nc = strcat(filepath_nc, files);
 
+%% Video writer object 
+% aviFilename = strcat(YYYY{index},'-', MM{index},'-', DD{index},'-', hh{index}, mm{index},'.avi');
+% writerObj = VideoWriter(aviFilename);
+% writerObj.FrameRate = 1;
+% open(writerObj);
 n = 1;
+%% SAVE/LOAD VARIABLES
+% Set to 'Yes' to save netcdf data to .mat files (do every time new limits are set)
+% Set to 'No' to load netcdf data from .mat files
+load_data = 'Yes';
+% load_data = 'no';
+%% Label mode
+label_mode = false;
+label_names = [];
+load labels
+area_mode = false;
+fig.CurrentCharacter = 'd';
+% DD{1} = '14';
+% hh{1} = '03';
 while(1)
     %% Format filename and check if exists
-    file = strcat(filepath_nc, 'S10635346_', YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index},'.nc');
-    if ~ismember(file, path_nc)
+    image_name = strcat('S10635346_', YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index});
+    file_nc = strcat(filepath_nc, image_name, '.nc');
+    if ~ismember(file_nc, path_nc)
         [MM{index}, DD{index}, hh{index}, mm{index}] = addMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
         continue
     end
-    
+        
     %% Load netcdf4 file into variables
-    % Get the latitudes
-    lats = ncread(char(file), 'lat');
-    % Get the longitudes
-    lons = ncread(char(file), 'lon')';
-    % Extract the Brightness Temperature values from the NetCDF
-    temp = ncread(char(file), 'Band1');
-    
-    %% Flip the y axis, divide by 100 and subtract 273.15 to convert to celcius
-    temp = flipud(rot90(temp))/ 100 - 273.15;
-    %% Mask data
-    temp(temp < -80) = NaN;
-    temp(temp > 20) = 255;
-    
-    %% Get corresponding index for extent values
-    % latitude lower and upper index
-    [latlv, latli] = min(abs(lats - min_lat(index)));
-    [latuv, latui] = min(abs(lats - max_lat(index)));
-    
-    % longitude lower and upper index
-    [lonlv, lonli] = min(abs(lons - min_lon(index)));
-    [lonuv, lonui] = min(abs(lons - max_lon(index)));
-    
-    %% Prepare Temperature Data
-    % load less values for faster processing
-    skip = 1;
-    % load data within the set extent
-    plottedTemp = temp(latli:skip:latui, lonli:skip:lonui);
-    plottedLons = lons(lonli:skip:lonui);
-    plottedLats = lats(latli:skip:latui);
-    % Filter out temperatures
-    thresholdTemp = -56;
-%     plottedTemp(plottedTemp > thresholdTemp) = NaN;
+    if strcmp(load_data, 'Yes')
+        load(strcat('./data_mat/', image_name, '.mat'));
+    else
+        % Get the latitudes
+        lats = ncread(char(file_nc), 'lat');
+        % Get the longitudes
+        lons = ncread(char(file_nc), 'lon')';
+        % Extract the Brightness Temperature values from the NetCDF
+        temp = ncread(char(file_nc), 'Band1');
+        
+        % Flip the y axis, divide by 100 and subtract 273.15 to convert to celcius
+        temp = flipud(rot90(temp))/ 100 - 273.15;
+        % Mask data
+        temp(temp < -80) = NaN;
+        temp(temp > 20) = 255;
+        
+        % Get corresponding index for extent values
+        % latitude lower and upper index
+        [latlv, latli] = min(abs(lats - min_lat(index)));
+        [latuv, latui] = min(abs(lats - max_lat(index)));
+        
+        % longitude lower and upper index
+        [lonlv, lonli] = min(abs(lons - min_lon(index)));
+        [lonuv, lonui] = min(abs(lons - max_lon(index)));
+        
+        % Prepare Temperature Data
+        % load less values for faster processing
+        skip = 1;
+        % load data within the set extent
+        plottedTemp = temp(latli:skip:latui, lonli:skip:lonui);
+        plottedLons = lons(lonli:skip:lonui);
+        plottedLats = lats(latli:skip:latui);
+        
+        save(strcat('./data_mat/', image_name, '.mat'), 'plottedTemp', 'plottedLons', 'plottedLats', 'lonli', 'lonui', 'latli', 'latui');
+    end
+
     %% Plot Cloud Top Temperatures
-    axis([lons(lonli), lons(lonui), lats(latli), lats(latui)]);
-    
-    imagesc(plottedLons, plottedLats, plottedTemp);
-    %% Move Coastlines up
-    uistack(Countries, 'top')
-    uistack(States, 'top')
+    if n == 1
+        temp_plot = imagesc('XData', plottedLons, 'YData', plottedLats, 'CData', plottedTemp);
+        patch_fov = patch([1,1], [2,2], 'red', 'FaceAlpha', 0.2, 'visible', 'off');
+        axis([plottedLons(1), plottedLons(end)+0.1, plottedLats(1), plottedLats(end)+0.1]);
+        
+        % stormm labels
+%         label(1) = text(-70,-30, 'r1', 'color', 'white', 'FontSize', 16);
+%         label(2) = text(-70,-30, 'r2', 'color', 'white', 'FontSize', 16);
+%         label(3) = text(-70,-30, 'r3', 'color', 'white', 'FontSize', 16);
+%         label(4) = text(-70,-30, 'r4', 'color', 'white', 'FontSize', 16);
+%         label_test = text(-70,-30, 'r9', 'color', 'white', 'FontSize', 16);
+        
+    else
+        %% Mask temp
+%         plottedTemp(plottedTemp >= -32) = 20;
+%         plottedTemp(plottedTemp <= -32 & plottedTemp >= -52) = -10;
+%         plottedTemp(plottedTemp <= -52) = -52;
+        set(temp_plot, 'XData', plottedLons, 'YData', plottedLats, 'CData', plottedTemp);
+%         set(cb, 'visible', 'off')
+    end
+    %% Plot title and country outlines
+    % Draw title
+    title(ax, [YYYY{index}, '/', MM{index}, '/', DD{index},' - ', hh{index}, ':', mm{index}], 'FontSize', 16);
+    % Move Coastlines up
+%     uistack(Countries, 'top')
+%     uistack(States, 'top')
     uistack(Stations, 'top')
-    TextDate = text(min_lon(index)+0.5, min_lat(index)+0.5,[YYYY{index}, '/', MM{index}, '/', DD{index},' - ', hh{index}, ':', mm{index}], 'BackgroundColor', 'white', 'FontSize', 15);
+    
 
     %% Plot camera observation lines
-    %% Night (1): 05:00 -> 06:00 150 Anillaco 2
-    % Night (1): 06:00 -> 08:00 155 Anillaco
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%         
-%     if isAfter(DD{index}, hh{index}, mm{index}, DD{index}, '05', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, DD{index}, '06','00')
-%         azimuth = 150;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     
-%     if isAfter(DD{index}, hh{index}, mm{index}, DD{index}, '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, DD{index}, '08','00')
-%         azimuth = 155;
-%         plot_fov(origin, azimuth, radius);
-%     end
-    %% Night (2): 01:00 -> 04:00 195 SMS 1
-    % Night (2): 04:00 -> 08:00 180 SMS
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%         
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '01', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '04','00')
-%         azimuth = 195;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '04','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '08','00')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-    %% Night (3) - SMS 1
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (3): 23:00 -> 01:00 180 SMS 1
-%     if isAfter(DD{index}, hh{index}, mm{index}, '28', '23', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '01','00')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 01:00 -> 02:00 160 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '01','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '02','00')
-%         azimuth = 160;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 02:00 -> 02:30 180 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '02','30')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 02:30 -> 05:00 190 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '02','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '05','00')
-%         azimuth = 190;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 05:00 -> 08:30 235 SMS
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '08','30')
-%         azimuth = 235;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3) - La Maria 3
-%     origin = [stations_lon(3), stations_lat(3)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (3): 04:00 -> 06:00 130 La Maria 3
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '04', '00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '06','00')
-%         azimuth = 130;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (3): 06:00 -> 08:30 120 La Maria
-%     if isAfter(DD{index}, hh{index}, mm{index}, '29', '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '29', '08','30')
-%         azimuth = 120;
-%         plot_fov(origin, azimuth, radius);
-%     end
-    %% Night (4): 250 SMS 1
-%     origin = [stations_lon(1), stations_lat(1)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (4): 00:30 -> 01:30 250 SMS 1
-%     if isAfter(DD{index}, hh{index}, mm{index}, '27', '00','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '27', '01','30')
-%         azimuth = 250;
-%         plot_fov(origin, azimuth, radius);
-%     end
-
-    %% Night (5): La Maria 3
-%     origin = [stations_lon(3), stations_lat(3)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (5): 05:00 -> 06:00 90 La Maria 3
-%     if isAfter(DD{index}, hh{index}, mm{index}, '02', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '02', '06','00')
-%         azimuth = 90;
-%         plot_fov(origin, azimuth, radius);
-%     end
-    %% Night (6): Anillaco 2
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (6): 02:00 -> 05:00 125 Anillaco 
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '05','00')
-%         azimuth = 125;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 05:00 -> 06:00 140 Anillaco
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '05','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '06','00')
-%         azimuth = 140;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 06:00 -> 07:30 130 Anillaco
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '06','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '07','30')
-%         azimuth = 130;
-%         plot_fov(origin, azimuth, radius);
-%     end
-%     % Night (6): 06:30 -> 06:45 180 La Maria
-%     if isAfter(DD{index}, hh{index}, mm{index}, '14', '06','30')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '14', '06','45')
-%         azimuth = 180;
-%         plot_fov(origin, azimuth, radius);
-%     end
-
-    %% Night (7): Anillaco
-
-    %% Night (8): Anillaco 2
-%     origin = [stations_lon(2), stations_lat(2)];
-%     radius = 10 ;   % 1 degree ~110km
-%     % Night (8): 02:00 -> 03:30 190 Anillaco 2
-%     if isAfter(DD{index}, hh{index}, mm{index}, '01', '02','00')...
-%         && isBefore(DD{index}, hh{index}, mm{index}, '01', '03','30')
-%         azimuth = 190;
-%         plot_fov(origin, azimuth, radius);
-%     end
-
-    %% Night (9): Anillaco
-
-    %% Contour plot
-%     contourData = temp(latli:skip:latui, lonli:skip:lonui);
-    % mask data to not show in the contour
-%     contourData(contourData > -0) = NaN;
-    % Set contour bands
-    % values = [-46 -52 -58 -64 -70 -76 -80];
-%     values = [thresholdTemp -66 -72 -76 -85];
-%     values = [thresholdTemp -80];
+    plot_stations_fov
+    %% Label isolated regions
+%     getIsolatedAreas
     
-    % plot the contour
-%     [C,h] = contour(plottedLons,plottedLats,contourData, values, 'Fill', 'on','ShowText','on');
-%     [C,h] = contourf(plottedLons,plottedLats,contourData, values);
+    if fig.CurrentCharacter ~= '2'
+        label_mode = false;
+%         set(label_test, 'Visible', 'off');
+    end
+    if fig.CurrentCharacter ~= '4' && fig.CurrentCharacter ~= 'a'
+        area_mode = false;
+    end
+%     pause(0.001);
+    if not(label_mode) && not(area_mode)
+        waitforbuttonpress
+        disp(strcat('key pressed: ', fig.CurrentCharacter))
+    end
 
+    if fig.CurrentCharacter == '1'
+        label_core = inputdlg('Enter label name');
+        fig.CurrentCharacter = '0';
+    end
+    
+    if fig.CurrentCharacter == '2'
+        label_mode = true;
+        waitforbuttonpress
+        cursor_point = get(gca, 'CurrentPoint');
+        lon_cursor = cursor_point(1,1); 
+        lat_cursor = cursor_point(1,2);
+        disp([lat_cursor lon_cursor]);
+        labels.(image_name).(label_core{1})= [lon_cursor lat_cursor];
+        set(label_test, 'Position', labels.(image_name).(label_core{1}), 'Visible', 'on');
+    end
+    
+    if fig.CurrentCharacter == '3'
+        save labels.mat labels
+        fig.CurrentCharacter = '0';
+        disp('labels manually saved, continue')
+    end
+    
+    if fig.CurrentCharacter == '4'
+        area_mode = true;
+        % Filter out temperatures
+        % thresholdTemp = -32;
 
-%     clabel(C, 'manual');
+        
+%         cursor_point = get(gca, 'CurrentPoint');
+%         lon_cursor = cursor_point(1,1); 
+%         lat_cursor = cursor_point(1,2);
+%         disp([lon_cursor lat_cursor]);
+%         [delta_x,x] = min(abs(plottedLons - lon_cursor));
+%         [delta_y,y] = min(abs(plottedLats - lat_cursor));
+%         disp([x y])
+        getIsolatedAreas
+    end
+
+    %% Next/Previous data scan
+%     if fig.CurrentCharacter == 'd' || fig.CurrentCharacter == '0' || fig.CurrentCharacter == '2'
+    if fig.CurrentCharacter == 'd' || fig.CurrentCharacter == '0' || fig.CurrentCharacter == '2' || fig.CurrentCharacter == '4'
+        n = n + 1;
+        [MM{index}, DD{index}, hh{index}, mm{index}] = addMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
+    end
     
+    if fig.CurrentCharacter == 'a'
+        area_mode = true;
+        getIsolatedAreas
+        n = n - 1;
+        [MM{index}, DD{index}, hh{index}, mm{index}] = subMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
+    end
     
-    n = n + 1;
-    pause(0.1);
-    [MM{index}, DD{index}, hh{index}, mm{index}] = addMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
     if strcmp(DD{index}, DDEnd{index}) && strcmp(hh{index}, hhEnd{index}) && strcmp(mm{index}, mmEnd{index})
         break
     end
+    
+    set(patch_fov, 'visible', 'off')
+    %% Write to video
+%     frame = getframe(fig);
+%     writeVideo(writerObj,frame);
+
     % end
-    %% Label isolated regions
-%     % need to set data as 0 or 1, 1 being pixels above the threshold
-%     thresholdTemp = -58;
-%     plottedTemp(plottedTemp > thresholdTemp) = 0;
-%     plottedTemp(plottedTemp < thresholdTemp) = 1;
-%     tic
-%     % Matrix L contains isolated regions
-%     L = bwlabel(plottedTemp,4);
-%     
-%     % CC = bwconncomp(plottedTemp)
-%     % stats = regionprops(CC, 'basic')
-%     % L = labelmatrix(CC)
-%     % Ignore small areas
-%     minPixelArea = 1000;
-%     for group = 1 : length(unique(L))
-%         if nnz(L==group) < minPixelArea
-%             L(L==group)=0;
-%         end
-%     end
-%     
-%     isolatedRegions = unique(L);
-%     isolatedRegions = isolatedRegions(2:end);
-%     for nRegion = isolatedRegions'
-%         % find all the pixels of the n region:
-%         [r,c] = find(L==nRegion);
-%         % [lat,lon]
-%         rc = [r c];
-%         dArea = 0;
-%         for index = 1 : size(rc)
-%             % get distance from [lat(i) lon(i)] to [lat(i+1) lon(i)]
-%             dlat = haversineDist(...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)),...
-%                 plottedLats(rc(index,1)-1,1),...
-%                 plottedLons(1,rc(index,2)));
-%             % get distance from [lat(i) lon(i)] to [lat(i) lon(i+1)]
-%             dlon = haversineDist(...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)),...
-%                 plottedLats(rc(index,1),1),...
-%                 plottedLons(1,rc(index,2)+1));
-%             % calculate current pixel area as the product between deltas
-%             % add each pixel area to the isolated region area
-%             dArea = dArea + dlat*dlon;
-%         end
-%         %     fprintf('Region: %3d , Area: %6.0f km2, Pixels: \n',nRegion, dArea)
-%         fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: %d\n',index, dArea, nRegion)
-%         
-%     end
-%     isolatedCalc = toc
+
 end
+% save labels.mat labels
+% close(writerObj);

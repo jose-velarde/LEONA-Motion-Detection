@@ -60,11 +60,7 @@ outlon(:,end) = [];
 % centerrow= round(nr/2);
 % centercol= round(nc/2);
 
-listpix = zeros(1,2);       % inicialization
-pixarea = zeros(1,2);
 
-k = 1;
-kp = 1; s = 1;
 
 % Check all neighboors around chosen pixel
 display('--->>> Select a region.');
@@ -79,7 +75,7 @@ cr = [2168 757];
 [lonv, loni] = min(abs(lonarray - cr(1)));
 cr = [loni(1) lati(1)];
 
-
+% outimage es la region de interes
 while outimage(cr(2),cr(1)) > T
     display('--->>> Select a region.');
     cr = round(ginput(1))  % returns the X and Y coordinates of the selected point
@@ -90,6 +86,13 @@ while outimage(cr(2),cr(1)) > T
     cr = [loni(1) lati(1)]
     outimage(cr(2),cr(1));
 end
+
+listpix = zeros(1,2);       % inicialization
+pixarea = zeros(1,2);
+
+k = 1;
+kp = 1; 
+s = 1;
 
 % v(1,1) = cr(1,2);
 % v(1,2) = cr(1,1);
