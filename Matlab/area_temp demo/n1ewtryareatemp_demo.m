@@ -144,10 +144,11 @@ while(1)
 %         disp([lon_cursor lat_cursor]);
         [delta_x,x] = min(abs(plottedLons - lon_cursor));
         [delta_y,y] = min(abs(plottedLats - lat_cursor));
-%         disp([x y])
+        disp([x y])
 
         T = plottedTemp(y,x);
-        [area, xy] = area_temp_no_dialog(plottedTemp, plottedLons,plottedLats, x, y, T);
+        areatemp
+%         [area, xy] = area_temp_no_dialog(plottedTemp, plottedLons,plottedLats, x, y, T);
         fprintf('lon: %.2f , lat: %.2f , T: %.2f, area: %.2f km2\n',lon_cursor, lat_cursor, T, area)
 %         waitforbuttonpress
     end
