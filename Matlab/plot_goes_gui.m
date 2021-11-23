@@ -86,7 +86,7 @@ Stations = plot(ax, stations_lon, stations_lat, 'pblack', 'MarkerSize', 15,'Mark
 
 min_lon = [-75    -70    -70    -65    -70    -70    -70    -70    -70];
 max_lon = [-50    -25    -25    -40    -25    -35    -45    -55    -50];
-min_lat = [-40    -40    -40    -40    -50    -45    -45    -40    -45];
+min_lat = [-40    -50    -40    -40    -50    -45    -45    -40    -45];
 max_lat = [-25    -25    -25    -20    -20    -25    -20    -25    -25];
 
 %% Observation dates start and end time
@@ -103,7 +103,7 @@ hhEnd   = {'22'  ,'14'  ,'00'  ,'05'  ,'00'  ,'08'  ,'05'  ,'23'  ,'11'  };
 mmEnd   = {'10'  ,'10'  ,'10'  ,'10'  ,'10'  ,'15'  ,'15'  ,'15'  ,'15'  };
 night   = { 1    , 2    , 3    , 4    , 5    ,  6   , 7    , 8    , 9    };
 %% OBSERVATION NIGHT %%
-index = 1;
+index = 3;
 
 %% Define .nc files path
 filepath_nc = strcat('C:/Users/sauli/Downloads/Soft_Tesis/OpenCV/CPTEC data/', YYYY{index},'_nc/');
@@ -122,6 +122,8 @@ n = 1;
 % Set to 'No' to load netcdf data from .mat files
 load_data = 'Yes';
 % load_data = 'no';
+% load_cg_data = 'Yes';
+load_cg_data = 'no';
 %% Label mode
 label_mode = false;
 label_names = [];
@@ -215,7 +217,8 @@ while(1)
         label_mode = false;
 %         set(label_test, 'Visible', 'off');
     end
-    if fig.CurrentCharacter ~= '4' && fig.CurrentCharacter ~= 'a'
+%     if fig.CurrentCharacter ~= '4' && fig.CurrentCharacter ~= 'a'
+    if fig.CurrentCharacter ~= '4'
         area_mode = false;
     end
 %     pause(0.001);
@@ -260,6 +263,10 @@ while(1)
 %         [delta_y,y] = min(abs(plottedLats - lat_cursor));
 %         disp([x y])
         getIsolatedAreas
+        light_spr_goes
+        
+        waitforbuttonpress
+        % pause(0.01)
     end
 
     %% Next/Previous data scan
@@ -270,8 +277,9 @@ while(1)
     end
     
     if fig.CurrentCharacter == 'a'
-        area_mode = true;
-        getIsolatedAreas
+%         area_mode = true;
+%         getIsolatedAreas
+        light_spr_goes
         n = n - 1;
         [MM{index}, DD{index}, hh{index}, mm{index}] = subMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
     end

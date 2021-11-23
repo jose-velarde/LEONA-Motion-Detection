@@ -52,6 +52,14 @@ if isAfter(current_time, 201911020400)...
 end
 %% Night (3) - SMS 1
 
+if isAfter(current_time, 201910281300)...
+        && isBefore(current_time, 201910282300)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+
+    azimuth = 180;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
 % Night (3): 23:00 -> 01:00 180 SMS 1
 if isAfter(current_time, 201910282300)...
         && isBefore(current_time, 201910290100)

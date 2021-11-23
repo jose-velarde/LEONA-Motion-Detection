@@ -147,7 +147,7 @@ while(1)
         disp([x y])
 
         T = plottedTemp(y,x);
-        areatemp
+        area_temp_no_dialog
 %         [area, xy] = area_temp_no_dialog(plottedTemp, plottedLons,plottedLats, x, y, T);
         fprintf('lon: %.2f , lat: %.2f , T: %.2f, area: %.2f km2\n',lon_cursor, lat_cursor, T, area)
 %         waitforbuttonpress
