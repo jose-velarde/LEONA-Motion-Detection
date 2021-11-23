@@ -2,9 +2,9 @@ import pandas as pd
 
 for part in range(1, 21):
     if part == 1:
-        chunk = pd.read_csv('C:\\Users\\sauli\\Downloads\\Soft_Tesis\\data_part_'+ str(part) + '.csv', delimiter='|', skiprows=[1])
+        chunk = pd.read_csv('C:\\Users\\Rede LEONA\\Downloads\\Jose Downloads\\OpenCV\\Matlab\\brasildat_data\\data_part_'+ str(part) + '.csv', delimiter='|', skiprows=[1])
     else:
-        chunk = pd.read_csv('C:\\Users\\sauli\\Downloads\\Soft_Tesis\\data_part_'+ str(part) + '.csv', delimiter='|')
+        chunk = pd.read_csv('C:\\Users\\Rede LEONA\\Downloads\\Jose Downloads\\OpenCV\\Matlab\\brasildat_data\\data_part_'+ str(part) + '.csv', delimiter='|')
 
     chunk.columns = chunk.columns.str.replace(' ', '')
 
