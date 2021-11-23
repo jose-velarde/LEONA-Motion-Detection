@@ -364,5 +364,5 @@ end
 % legends_handler = legend(legend_array(:), 'location', 'southeast');
 set(cb, 'visible', 'off')
 
-waitforbuttonpress
+% waitforbuttonpress
 % pause(0.01)
