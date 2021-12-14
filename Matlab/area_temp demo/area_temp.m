@@ -68,8 +68,9 @@ dlon=dlat;
 
 area_per_pixel = dlat*dlon;
 stormarea = area_per_pixel * size(pixarea,1);
-fprintf('lon: %.2f , lat: %.2f , T: %.2f, area: %.2f km2\n',lon_cursor, lat_cursor, T, stormarea)
+fprintf('lon: %.2f , lat: %.2f , T: %.2f, area: %.2f km2\n, pixels: %d',lon_cursor, lat_cursor, T, stormarea, size(pixarea,1))
 % for k=1:size(pixarea,1)
 %     stormarea = stormarea + sum(sum( dA(pixarea(k,1),pixarea(k,2)) ));
 % end
+waitforbuttonpress
 end

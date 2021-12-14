@@ -6,7 +6,7 @@ coreTemp(coreTemp ~= 1) = 0;
 
 
 %% Look for isolated regions smaller than 300 pixels and 1000 km away or less
-CC = bwconncomp(coreTemp);
+CC = bwconncomp(coreTemp, 8);
 CC.PixelIdxList(cellfun(@numel, CC.PixelIdxList) < size) = [];
 CC.NumObjects = numel(CC.PixelIdxList);
 

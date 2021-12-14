@@ -1,368 +1,303 @@
-%% Figure setup
-if n == 1
-    prev_labels(100) = struct('label', '', 'centroid', []);
-    current_labels(100) = struct('label', '', 'centroid', []);
+%% Setup
+
+if ~exist('setup_isolated_areas', 'var')
+    setup_isolated_areas = true;
+    
+    prev_labels(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+%     current_labels(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
     current_centroids = cell(1, 100);
-    prev_centroids = cell(1, 100);
     label_id = 1;
-
-    prev_labels2(100) = struct('label', '', 'centroid', []);
-    current_labels2(100) = struct('label', '', 'centroid', []);
+    
+    prev_labels2(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+%     current_labels2(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
     current_centroids2 = cell(1, 100);
-    prev_centroids2 = cell(1, 100);
     label_id2 = 1;
-
+    
+    prev_labels3(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+%     current_labels3(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+    current_centroids3 = cell(1, 100);
+    label_id3 = 1;
 end
 
-%% Black and White mask
-% Set data as 0 or 1, 1 being pixels above the threshold
-T_cover = -32;
-T_core = -52;
-T_cover_mask = -10;
-T_core_mask = -50;
-warm_mask = 10;
+legends = {'Region, Pixels, Area, Dist'};
+% Set temperatures values to match a color in the imagesc
 tempLabels = plottedTemp;
 plottedTemp(plottedTemp >= T_cover) = warm_mask;
 plottedTemp(plottedTemp <= T_cover & plottedTemp >= T_core) = T_cover_mask;
-plottedTemp(plottedTemp <= T_core) = T_core_mask;
+plottedTemp(plottedTemp <= T_core & plottedTemp >= T_most) = T_core_mask;
+plottedTemp(plottedTemp <= T_most) = T_most_mask;
 set(temp_plot, 'XData', plottedLons, 'YData', plottedLats, 'CData', plottedTemp);
 %% T_Cover
 
-pixel_size = 1000;
-distance = 1100;
-[CC2, L2] = label_and_filter(tempLabels, plottedLats, plottedLons, T_cover, pixel_size,  origin, distance);
-% prev_labels2 = plot_isolated_regions(CC2,L2, n, prev_labels2, label_id2, plottedLons, plottedLats);
-regions_info = regionprops(L2, 'basic');
+[CC2, L2] = label_and_filter(tempLabels, plottedLats, plottedLons, T_cover, min_pix_cover, origin, dist_cover);
+[current_labels2, label_id2] = get_regions(prev_labels2, label_id2, CC2, L2);
 
-isolatedRegions = unique(L2);
-isolatedRegions = isolatedRegions(isolatedRegions~=0);
-if n == 1
-
-    for i = isolatedRegions'
-        if isempty(i)
-            continue
-        end
-        [isolated_lats, isolated_lons] = ind2sub(CC2.ImageSize, CC2.PixelIdxList{i});
-
-        isolated_plot2(label_id2) = plot(plottedLons(isolated_lons), plottedLats(isolated_lats), '.k', 'Color', 'yellow');
-
-        prev_labels2(label_id2).centroid = round(regions_info(i).Centroid);
-        prev_labels2(label_id2).label = num2str(label_id2);
-
-        label_centroid2(label_id2) = text(plottedLons(1, ...
-            prev_labels2(label_id2).centroid(1)), ...
-            plottedLats(prev_labels2(label_id2).centroid(2), 1), ...
-            strcat('g', prev_labels2(label_id2).label), 'color', 'black', 'FontSize', 17);
-        label_id2 = label_id2 + 1;
+for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+    current_label = str2double(current_region2.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels2);
+    
+    if label_already_in
+        set(region_plot2(current_label), 'XData', plottedLons(current_region2.pixels(:, 2)), 'YData', plottedLats(current_region2.pixels(:, 1)))
+        uistack(region_plot2(current_label), 'top')
+    else
+        region_plot2(current_label) = plot(plottedLons(current_region2.pixels(:, 2)), plottedLats(current_region2.pixels(:, 1)), '.k', 'Color', tcoverIn_color);
     end
-
-else
-    current_labels = prev_labels2;
-    %% Look for existing regions
-    for label_j = current_labels(~cellfun(@isempty, {current_labels.label}))
-        current_label_id2 = str2double(label_j.label);
-        label_already_in = false;
-        regions_count = isolatedRegions;
-        %% Check if region j is less than 10 pixels away any current isolated region
-        for l = regions_count'
-
-            if isempty(l) || l == 0
-                continue
-            end
-
-            current_centroids{l} = round(regions_info(l).Centroid);
-
-            if max(abs(label_j.centroid - current_centroids{l})) < 20 && ~label_already_in
-                %% Found matching region to label j
-                % Plot region
-                [isolated_lats, isolated_lons] = ind2sub(CC2.ImageSize, CC2.PixelIdxList{l});
-                set(isolated_plot2(current_label_id2), 'XData', plottedLons(isolated_lons), 'YData', plottedLats(isolated_lats))
-                % Plot region label
-                set(label_centroid2(current_label_id2), ...
-                'Position', ...
-                    [plottedLons(1, current_centroids{l}(1)) plottedLats(current_centroids{l}(2), 1)], ...
-                    'visible', 'on');
-%                 fprintf('label g%s is the same at %d %d\n', ...
-%                     label_j.label, current_centroids{l}(1), current_centroids{l}(2))
-                % Remove found region from following checks
-                label_already_in = true;
-                isolatedRegions(isolatedRegions == l) = [];
-                prev_labels2(current_label_id2).centroid = current_centroids{l};
-                break
-            end
-
-        end
-
-        %% Remove region
-        if ~label_already_in
-            set(isolated_plot2(current_label_id2), 'visible', 'off')
-            delete(isolated_plot2(current_label_id2))
-            set(label_centroid2(current_label_id2), 'visible', 'off');
-            delete(label_centroid2(current_label_id2))
-            prev_labels2(current_label_id2).label = [];
-        end
-
-    end
-
-    %% Create new region
-    if ~isempty(isolatedRegions')
-
-        for k = isolatedRegions'
-            prev_labels2(label_id2).centroid = round(regions_info(k).Centroid);
-            prev_labels2(label_id2).label = num2str(label_id2);
-
-            [isolated_lats, isolated_lons] = ind2sub(CC2.ImageSize, CC2.PixelIdxList{k});
-            isolated_plot2(label_id2) = plot(plottedLons(isolated_lons), plottedLats(isolated_lats), '.k', 'Color', 'yellow');
-
-            label_centroid2(label_id2) = text( ...
-                plottedLons(1, prev_labels2(label_id2).centroid(1)), ...
-                plottedLats(prev_labels2(label_id2).centroid(2), 1), ...
-                strcat('g', prev_labels2(label_id2).label), 'color', 'black', 'FontSize', 17);
-            label_id2 = label_id2 + 1;
-        end
-
-    end
-
+    
 end
-legend_array = {};
 
-isolatedRegions = unique(L2);
-isolatedRegions = isolatedRegions(isolatedRegions~=0);
-
-for nRegion = isolatedRegions'
-
-    if isempty(isolatedRegions)
-        continue
+for previous_region2 = prev_labels2(~cellfun(@isempty, {prev_labels2.label}))
+    prev_label = str2double(previous_region2.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels2);
+    
+    if ~label_already_in
+        set(region_plot2(prev_label), 'visible', 'off')
+        delete(region_plot2(prev_label))
     end
+    
+end
 
-    % find all the pixels of the n region:
-    [lat, lon] = find(L2 == nRegion);
-    lonlat = [lon lat];
-    % distance between lats is always the same
-    dlat = haversineDist( ...
-    plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)), ...
-        plottedLats(lonlat(1, 2), 1) + 0.0291, ...
-        plottedLons(1, lonlat(1, 1)));
+for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+    current_label = str2double(current_region2.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels2);
+    
+    if label_already_in
+        set(region_plot_label2(current_label), ...
+            'Position', ...
+            [plottedLons(1, current_region2.bounds(1)) plottedLats(current_region2.bounds(2), 1)], ...
+            'visible', 'on');
+        uistack(region_plot_label2(current_label), 'top')
+    else
+        region_plot_label2(current_label) = text(plottedLons(1, ...
+            current_region2.bounds(1)), ...
+            plottedLats(current_region2.bounds(2), 1), ...
+            strcat('g', current_region2.label), 'color', 'black', 'FontSize', 17);
+    end
+    
+end
 
-    % distance between lons has to be calculated every new lon
-    % get initial delta longitude and calculate again with the next lon row
-    prev_dlon = haversineDist( ...
-    plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)), ...
-        plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)) + 0.0291);
-    prev_lon = lonlat(1, 1);
-    dArea = size(lonlat, 1) * prev_dlon * prev_dlon;
-    %     dArea = 0;
-    %     for i = 1:size(lonlat, 1)
-    %         dArea = dArea + prev_dlon * dlat;
-    %
-    %         if prev_lon ~= lonlat(i, 1)
-    %             prev_lon = lonlat(i, 1);
-    %             prev_dlon = haversineDist( ...
-    %                 plottedLats(lonlat(i, 2), 1), ...
-    %                 plottedLons(1, lonlat(i, 1)), ...
-    %                 plottedLats(lonlat(i, 2), 1), ...
-    %                 plottedLons(1, lonlat(i, 1)) + 0.0291);
-    %         end
-    %
-    %     end
+for previous_region2 = prev_labels2(~cellfun(@isempty, {prev_labels2.label}))
+    prev_label = str2double(previous_region2.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels2);
+    
+    if ~label_already_in
+        set(region_plot_label2(prev_label), 'visible', 'off');
+        delete(region_plot_label2(prev_label))
+    end
+    
+end
 
-    current_centroids{nRegion} = round(regions_info(nRegion).Centroid);
-
-    distance = haversineDist(plottedLats(current_centroids{nRegion}(2)), ...
-        plottedLons(current_centroids{nRegion}(1)), ...
+for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+    current_label2 = str2double(current_region2.label);
+    
+    [total_pixels, trash] = size(current_region2.pixels(:,2));
+    current_region2.area = total_pixels*4;
+    
+    distance = haversineDist(plottedLats(current_region2.centroid(2)), ...
+        plottedLons(current_region2.centroid(1)), ...
         origin(2), ...
         origin(1));
+    
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: G%d, distance: %.0f km\n', total_pixels, current_region2.area, current_label2, distance);
+    legends{end+1}= sprintf('G%03d, %8d, %8.0f, %8.0f\n', current_label2, total_pixels, current_region2.area, distance);
 
-    for label_j = prev_labels2(~cellfun(@isempty, {prev_labels2.label}))
-        current_label_id = str2double(label_j.label);
-
-        if max(abs(label_j.centroid - current_centroids{nRegion})) < 30
-
-            legend_array{end + 1} = sprintf('Area#%2d %3.0f km2', current_label_id, dArea);
-            fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: g%d, distance: %.0f km\n', size(lonlat, 1), dArea, current_label_id, distance)
-        end
-
-    end
-
+    fprintf(fileID ,'%10s, G%03d, %6d, %6.0f, %6.0f\n', date_time, current_label2, total_pixels, current_region2.area, distance);
 end
 
-% [core_lat, core_lon] = find(tempLabels <= T_core);
-% if n == 1
-%     core_plot = plot(plottedLons(core_lon), plottedLats(core_lat), '.k', 'Color', 'cyan');
-%     uistack(core_plot, 'top')
-% else
-%     set(core_plot, 'XData', plottedLons(core_lon), 'YData', plottedLats(core_lat))
-%     uistack(core_plot, 'top')
-% end
+prev_labels2 = current_labels2;
+
+
+%% Plot all tcore
+[tcore_lats, tcore_lons] = find(plottedTemp == T_core_mask);
+
+if n == 1
+    tcore_plot = plot(plottedLons(tcore_lons), plottedLats(tcore_lats), '.k', 'Color', tcoreOut_color);
+else
+    set(tcore_plot, 'XData', plottedLons(tcore_lons), 'YData', plottedLats(tcore_lats))
+    uistack(tcore_plot, 'top')
+end
 
 %% T_Core
-pixel_size = 300;
-distance = 1000;
 
-[CC, L] = label_and_filter(tempLabels, plottedLats, plottedLons, T_core, pixel_size, origin, 1000);
+[CC, L] = label_and_filter(tempLabels, plottedLats, plottedLons, T_core, min_pix_core, origin, dist_core);
 
-regions_info = regionprops(L, 'basic');
+[current_labels, label_id] = get_regions(prev_labels, label_id, CC, L);
 
-isolatedRegions = unique(L);
-isolatedRegions = isolatedRegions(isolatedRegions~=0);
-
-if n == 1
-
-    for i = isolatedRegions'
-        if isempty(i)
-            continue
-        end
-        [isolated_lats, isolated_lons] = ind2sub(CC.ImageSize, CC.PixelIdxList{i});
-        isolated_plot(label_id) = plot(plottedLons(isolated_lons), plottedLats(isolated_lats), '.k', 'Color', 'white');
-
-        prev_labels(label_id).centroid = round(regions_info(i).Centroid);
-        prev_labels(label_id).label = num2str(label_id);
-
-        label_centroid(label_id) = text(plottedLons(1, ...
-            prev_labels(label_id).centroid(1)), ...
-            plottedLats(prev_labels(label_id).centroid(2), 1), ...
-            strcat('c', prev_labels(label_id).label), 'color', 'black', 'FontSize', 17);
-        label_id = label_id + 1;
+for current_region = current_labels(~cellfun(@isempty, {current_labels.label}))
+    current_label = str2double(current_region.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels);
+    
+    if label_already_in
+        set(region_plot(current_label), 'XData', plottedLons(current_region.pixels(:, 2)), 'YData', plottedLats(current_region.pixels(:, 1)))
+        uistack(region_plot(current_label), 'top')
+    else
+        region_plot(current_label) = plot(plottedLons(current_region.pixels(:, 2)), plottedLats(current_region.pixels(:, 1)), '.k', 'Color', tcoreIn_color);
     end
-
-else
-    current_labels = prev_labels;
-    %% Look for existing regions
-    for label_j = current_labels(~cellfun(@isempty, {current_labels.label}))
-        current_label_id = str2double(label_j.label);
-        label_already_in = false;
-        regions_count = isolatedRegions;
-        %% Check if region j is less than 10 pixels away any current isolated region
-        for l = regions_count'
-
-            if isempty(l)
-                continue
-            end
-
-            current_centroids{l} = round(regions_info(l).Centroid);
-
-            if max(abs(label_j.centroid - current_centroids{l})) < 10 && ~label_already_in
-                %% Found matching region to label j
-                % Plot region
-                [isolated_lats, isolated_lons] = ind2sub(CC.ImageSize, CC.PixelIdxList{l});
-                set(isolated_plot(current_label_id), 'XData', plottedLons(isolated_lons), 'YData', plottedLats(isolated_lats))
-                % Plot region label
-                set(label_centroid(current_label_id), ...
-                'Position', ...
-                    [plottedLons(1, current_centroids{l}(1)) plottedLats(current_centroids{l}(2), 1)], ...
-                    'visible', 'on');
-%                 fprintf('label c%s is the same at %d %d\n', ...
-%                     label_j.label, current_centroids{l}(1), current_centroids{l}(2))
-                % Remove found region from following checks
-                label_already_in = true;
-                isolatedRegions(isolatedRegions == l) = [];
-                prev_labels(current_label_id).centroid = current_centroids{l};
-                break
-            end
-
-        end
-
-        %% Remove region
-        if ~label_already_in
-            set(isolated_plot(current_label_id), 'visible', 'off')
-            delete(isolated_plot(current_label_id))
-            set(label_centroid(current_label_id), 'visible', 'off');
-            delete(label_centroid(current_label_id))
-            prev_labels(current_label_id).label = [];
-        end
-
-    end
-
-    %% Create new region
-    if ~isempty(isolatedRegions')
-
-        for k = isolatedRegions'
-            prev_labels(label_id).centroid = round(regions_info(k).Centroid);
-            prev_labels(label_id).label = num2str(label_id);
-
-            [isolated_lats, isolated_lons] = ind2sub(CC.ImageSize, CC.PixelIdxList{k});
-            isolated_plot(label_id) = plot(plottedLons(isolated_lons), plottedLats(isolated_lats), '.k', 'Color', 'white');
-
-            label_centroid(label_id) = text( ...
-                plottedLons(1, prev_labels(label_id).centroid(1)), ...
-                plottedLats(prev_labels(label_id).centroid(2), 1), ...
-                strcat('c', prev_labels(label_id).label), 'color', 'black', 'FontSize', 17);
-            label_id = label_id + 1;
-        end
-
-    end
-
+    
 end
 
-legend_array = {};
-isolatedRegions = unique(L);
-isolatedRegions = isolatedRegions(isolatedRegions~=0);
-
-for nRegion = isolatedRegions'
-
-    if isempty(isolatedRegions)
-        continue
+for previous_region = prev_labels(~cellfun(@isempty, {prev_labels.label}))
+    prev_label = str2double(previous_region.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels);
+    
+    if ~label_already_in
+        set(region_plot(prev_label), 'visible', 'off')
+        delete(region_plot(prev_label))
     end
+    
+end
 
-    % find all the pixels of the n region:
-    [lat, lon] = find(L == nRegion);
-    lonlat = [lon lat];
-    % distance between lats is always the same
-    dlat = haversineDist( ...
-    plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)), ...
-        plottedLats(lonlat(1, 2), 1) + 0.0291, ...
-        plottedLons(1, lonlat(1, 1)));
+for current_region = current_labels(~cellfun(@isempty, {current_labels.label}))
+    current_label = str2double(current_region.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels);
+    
+    if label_already_in
+        set(region_plot_label(current_label), ...
+            'Position', ...
+            [plottedLons(1, current_region.bounds(1) + current_region.bounds(3)) plottedLats(current_region.bounds(2) + current_region.bounds(4) -1, 1)], ...
+            'visible', 'on');
+        uistack(region_plot_label(current_label), 'top')
+    else
+        region_plot_label(current_label) = text(plottedLons(1, ...
+            current_region.bounds(1) + current_region.bounds(3)), ...
+            plottedLats(current_region.bounds(2) + current_region.bounds(4) -1, 1), ...
+            strcat('c', current_region.label), 'color', 'black', 'FontSize', 17);
+    end
+    
+end
 
-    % distance between lons has to be calculated every new lon
-    % get initial delta longitude and calculate again with the next lon row
-    prev_dlon = haversineDist( ...
-    plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)), ...
-        plottedLats(lonlat(1, 2), 1), ...
-        plottedLons(1, lonlat(1, 1)) + 0.0291);
-    prev_lon = lonlat(1, 1);
-    dArea = size(lonlat, 1) * prev_dlon * prev_dlon;
-    %     dArea = 0;
-    %     for i = 1:size(lonlat, 1)
-    %         dArea = dArea + prev_dlon * dlat;
-    %
-    %         if prev_lon ~= lonlat(i, 1)
-    %             prev_lon = lonlat(i, 1);
-    %             prev_dlon = haversineDist( ...
-    %                 plottedLats(lonlat(i, 2), 1), ...
-    %                 plottedLons(1, lonlat(i, 1)), ...
-    %                 plottedLats(lonlat(i, 2), 1), ...
-    %                 plottedLons(1, lonlat(i, 1)) + 0.0291);
-    %         end
-    %
-    %     end
+for previous_region = prev_labels(~cellfun(@isempty, {prev_labels.label}))
+    prev_label = str2double(previous_region.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels);
+    
+    if ~label_already_in
+        set(region_plot_label(prev_label), 'visible', 'off');
+        delete(region_plot_label(prev_label))
+    end
+    
+end
 
-    current_centroids{nRegion} = round(regions_info(nRegion).Centroid);
 
-    distance = haversineDist(plottedLats(current_centroids{nRegion}(2)), ...
-        plottedLons(current_centroids{nRegion}(1)), ...
+for current_region = current_labels(~cellfun(@isempty, {current_labels.label}))
+    current_label = str2double(current_region.label);
+    
+    [total_pixels, trash] = size(current_region.pixels(:,2));
+    current_region.area = total_pixels*4;
+    
+    distance = haversineDist(plottedLats(current_region.centroid(2)), ...
+        plottedLons(current_region.centroid(1)), ...
         origin(2), ...
         origin(1));
-
-    for label_j = prev_labels(~cellfun(@isempty, {prev_labels.label}))
-        current_label_id = str2double(label_j.label);
-
-        if max(abs(label_j.centroid - current_centroids{nRegion})) < 30
-
-            legend_array{end + 1} = sprintf('Area#%2d %3.0f km2', current_label_id, dArea);
-            fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: c%d, distance: %.0f km\n', size(lonlat, 1), dArea, current_label_id, distance)
-        end
-
-    end
-
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: C%d, distance: %.0f km\n', total_pixels, current_region.area, current_label, distance);
+    legends{end+1} = sprintf('C%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.area, distance);
+    
+    fprintf(fileID,'%10s, C%03d, %6d, %6.0f, %6.0f\n', date_time, current_label, total_pixels, current_region.area, distance);
+    
 end
 
-% legends_handler = legend(legend_array(:), 'location', 'southeast');
-set(cb, 'visible', 'off')
+prev_labels = current_labels;
+%% Plot all T most convective
+[tmost_lats, tmost_lons] = find(plottedTemp == T_most_mask);
 
-% waitforbuttonpress
+if n == 1
+    tmost_plot = plot(plottedLons(tmost_lons), plottedLats(tmost_lats), '.k', 'Color', tmostOut_color);
+else
+    set(tmost_plot, 'XData', plottedLons(tmost_lons), 'YData', plottedLats(tmost_lats))
+    uistack(tmost_plot, 'top')
+end
+
+%% T most convective
+
+[CC3, L3] = label_and_filter(tempLabels, plottedLats, plottedLons, T_most, min_pix_most, origin, dist_most);
+
+[current_labels3, label_id3] = get_regions(prev_labels3, label_id3, CC3, L3);
+
+for current_region = current_labels3(~cellfun(@isempty, {current_labels3.label}))
+    current_label = str2double(current_region.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels3);
+    
+    if label_already_in
+        set(region_plot3(current_label), 'XData', plottedLons(current_region.pixels(:, 2)), 'YData', plottedLats(current_region.pixels(:, 1)))
+        uistack(region_plot3(current_label), 'top')
+    else
+        region_plot3(current_label) = plot(plottedLons(current_region.pixels(:, 2)), plottedLats(current_region.pixels(:, 1)), '.k', 'Color', tmostIn_color);
+    end
+    
+end
+
+for previous_region = prev_labels3(~cellfun(@isempty, {prev_labels3.label}))
+    prev_label = str2double(previous_region.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels3);
+    
+    if ~label_already_in
+        set(region_plot3(prev_label), 'visible', 'off')
+        delete(region_plot3(prev_label))
+    end
+    
+end
+
+for current_region = current_labels3(~cellfun(@isempty, {current_labels3.label}))
+    current_label = str2double(current_region.label);
+    
+    label_already_in = label_in_labels(current_label, prev_labels3);
+    
+    if label_already_in
+        set(region_plot_label3(current_label), ...
+            'Position', ...
+            [plottedLons(1, current_region.bounds(1) + current_region.bounds(3)) plottedLats(current_region.bounds(2) + current_region.bounds(4) -1, 1)], ...
+            'visible', 'on');
+        uistack(region_plot_label3(current_label), 'top')
+    else
+        region_plot_label3(current_label) = text(plottedLons(1, ...
+            current_region.bounds(1) + current_region.bounds(3)), ...
+            plottedLats(current_region.bounds(2) + current_region.bounds(4) -1, 1), ...
+            strcat('m', current_region.label), 'color', 'black', 'FontSize', 10);
+    end
+    
+end
+
+for previous_region = prev_labels3(~cellfun(@isempty, {prev_labels3.label}))
+    prev_label = str2double(previous_region.label);
+    
+    label_already_in = label_in_labels(prev_label, current_labels3);
+    
+    if ~label_already_in
+        set(region_plot_label3(prev_label), 'visible', 'off');
+        delete(region_plot_label3(prev_label))
+    end
+    
+end
+
+
+for current_region = current_labels3(~cellfun(@isempty, {current_labels3.label}))
+    current_label = str2double(current_region.label);
+    
+    [total_pixels, trash] = size(current_region.pixels(:,2));
+    current_region.area = total_pixels*4;
+    
+    distance = haversineDist(plottedLats(current_region.centroid(2)), ...
+        plottedLons(current_region.centroid(1)), ...
+        origin(2), ...
+        origin(1));
+    
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: M%d, distance: %.0f km\n', total_pixels, current_region.area, current_label, distance);
+    legends{end+1} = sprintf('M%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.area, distance);
+    
+    fprintf(fileID,'%10s, M%03d, %6d, %6.0f, %6.0f\n',date_time, current_label, total_pixels, current_region.area, distance);
+end
+
+prev_labels3 = current_labels3;
+
+
+legends_handler = legend(legends(:), 'location', 'northeastoutside');
+set(cb, 'visible', 'off')
 % pause(0.01)

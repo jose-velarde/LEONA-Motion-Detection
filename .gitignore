@@ -17,3 +17,9 @@ elve2.avi
 Matlab/area_temp demo.zip
 Matlab/2019-11-13-1500.avi
 BrasilDAT_data/
+GOES data/
+Matlab/caio_scripts/
+Gera_GOES-R_latlon_V2.py
+Matlab/*.txt
+Matlab/*.avi
+*.bin

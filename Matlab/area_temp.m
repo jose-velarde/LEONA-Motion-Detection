@@ -59,16 +59,18 @@ end
 plot(lons(pixarea(:,2)), lats(pixarea(:,1)),'.k', 'Color', 'black');
 
 % dlat = (0.0291)*6378*(pi/180);
-dlat = haversineDist( ...
-    lats(1, 1), ...
-    lons(1, 1), ...
-    lats(1, 1) + 0.0291, ...
-    lons(1, 1));
-dlon=dlat;
+% dlat = haversineDist( ...
+%     lats(1, 1), ...
+%     lons(1, 1), ...
+%     lats(1, 1) + 0.0291, ...
+%     lons(1, 1));
+% dlon=dlat;
 
-area_per_pixel = dlat*dlon;
+% area_per_pixel = dlat*dlon;
+area_per_pixel = 4;
+
 stormarea = area_per_pixel * size(pixarea,1);
-fprintf('lon: %.2f , lat: %.2f , T: %.2f, area: %.2f km2\n',lon_cursor, lat_cursor, T, stormarea)
+fprintf('lon: %.2f , lat: %.2f , T: %.2f, %4d pixels, area: %.2f km2\n',lon_cursor, lat_cursor, T, size(pixarea,1), stormarea)
 % for k=1:size(pixarea,1)
 %     stormarea = stormarea + sum(sum( dA(pixarea(k,1),pixarea(k,2)) ));
 % end

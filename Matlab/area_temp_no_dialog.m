@@ -1,4 +1,4 @@
-function [stormarea, cr] = area_temp_no_dialog(temp, lons, lats, x, y, T)
+function [stormarea, pixarea] = area_temp_no_dialog(temp, lons, lats, x, y, T)
 
 fprintf('Processing...\n')
 
@@ -36,15 +36,7 @@ end
 
 plot(lons(pixarea(:,2)), lats(pixarea(:,1)),'.k', 'Color', 'black');
 
-% dlat = (0.0291)*6378*(pi/180);
-dlat = haversineDist( ...
-    lats(1, 1), ...
-    lons(1, 1), ...
-    lats(1, 1) + 0.0291, ...
-    lons(1, 1));
-dlon=dlat;
-
-area_per_pixel = dlat*dlon;
+area_per_pixel = 2*2;
 stormarea = area_per_pixel * size(pixarea,1);
 % for k=1:size(pixarea,1)
 %     stormarea = stormarea + sum(sum( dA(pixarea(k,1),pixarea(k,2)) ));

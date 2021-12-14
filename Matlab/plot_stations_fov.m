@@ -52,7 +52,7 @@ if isAfter(current_time, 201911020400)...
 end
 %% Night (3) - SMS 1
 
-if isAfter(current_time, 201910281300)...
+if isAfter(current_time, 201910271300)...
         && isBefore(current_time, 201910282300)
     origin = [stations_lon(1), stations_lat(1)];
     radius = 10 ;   % 1 degree ~110km
@@ -146,6 +146,16 @@ if isAfter(current_time, 201910020500)...
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
 %% Night (6): Anillaco 2
+
+if isAfter(current_time, 201812130100)...
+        && isBefore(current_time, 201812140200)
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 3.6 ;
+
+    azimuth = 150;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
 % Night (6): 02:00 -> 05:00 125 Anillaco
 if isAfter(current_time, 201812140200)...
         && isBefore(current_time, 201812140500)
@@ -183,6 +193,13 @@ if isAfter(current_time, 201812140630)...
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
 
+if index == 6 && isAfter(current_time, 201812140730)
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 3.6 ;   % 1 degree ~110km
+
+    azimuth = 130;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
 %% Night (7): Anillaco
 
 %% Night (8): Anillaco 2
