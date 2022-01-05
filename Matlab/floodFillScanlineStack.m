@@ -28,7 +28,7 @@ while ~isempty(stack)
     while x1 <= w && tempData(y, x1) <= tresholdTemp
         list_pix(i,:) = [y x1];
 
-%         plot(plottedLons(x1),plottedLats(y),'.k', 'color', 'black');
+%         plot(plottedLons(x1),plottedLats(y),'.k', 'color', 'blue');
 %         pause(0.00001)
 %         frame = getframe(fig);
 %         writeVideo(writerObj,frame);

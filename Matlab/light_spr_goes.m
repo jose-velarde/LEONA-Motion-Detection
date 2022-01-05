@@ -1,5 +1,4 @@
 %% Boilerplate
-% load_data = 'Yes';
 if n == 1
     current_day = 'force_initial_load';
     new_minlatplot = min_lat(index);
@@ -68,6 +67,7 @@ posplot = poslight(( poslight(:,1) > 0 ...              % split +cg from -cg
           & poslight(:,11)>=tstart & poslight(:,11)<tend ...
           & poslight(:,6)>=new_minlatplot & poslight(:,6)<=new_maxlatplot ...
           & poslight(:,7)>=new_minlonplot & poslight(:,7)<=new_maxlonplot) ,:);
+      
 %     posplot_all = poslight(find( poslight(:,11)>=tstart & poslight(:,11)<tend ...
 %               & poslight(:,6)>=minlatplot & poslight(:,6)<=maxlatplot ...
 %               & poslight(:,7)>=minlonplot & poslight(:,7)<=maxlonplot) ,:);

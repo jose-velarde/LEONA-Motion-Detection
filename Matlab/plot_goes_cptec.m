@@ -122,7 +122,8 @@ path_nc = strcat(filepath_nc, files);
 aviFilename = strcat(YYYY{index},'-', MM{index},'-', DD{index},'-', hh{index}, mm{index},'.avi');
 writerObj = VideoWriter(aviFilename);
 writerObj.FrameRate = 1;
-% open(writerObj);
+open(writerObj);
+fig.CurrentCharacter = '4';
 
 %% SAVE/LOAD VARIABLES
 % Set to 'Yes' to save netcdf data to .mat files (do every time new limits are set)
@@ -136,7 +137,6 @@ label_mode = false;
 label_names = [];
 load labels
 area_mode = false;
-fig.CurrentCharacter = '1';
 % DD{1} = '14';
 % hh{1} = '03';
 %% Set temperature, area and distanet thresholds
@@ -270,26 +270,28 @@ while(1)
 %         [delta_x,x] = min(abs(plottedLons - lon_cursor));
 %         [delta_y,y] = min(abs(plottedLats - lat_cursor));
 %         disp([x y])
-
+% 
 %         tic
 %         [area, xy] = area_temp_no_dialog(plottedTemp, plottedLons, plottedLats, x, y, -32);
 %         Eliah_Json = toc;
 %         fprintf('%d pixels in %f \n', size(xy, 1), Eliah_Json)
 %         waitforbuttonpress
-
+% 
 %         tic
 %         list_pix = floodFillScanlineStack(x, y, plottedTemp(y,x), -32, plottedTemp, plottedLons, plottedLats, fig, writerObj);
 %         Flood_Fill_ScanLine_Stack = toc;
 %         fprintf('%d pixels in %f \n', size(list_pix, 1), Flood_Fill_ScanLine_Stack)
-%         plot(plottedLons(list_pix(:,2)),plottedLats(list_pix(:,1)),'.k', 'color', 'black');
-%         set(temp_plot, 'XData', plottedLons, 'YData', plottedLats, 'CData', plottedTemp);
-
+%         plot(plottedLons(list_pix(:,2)),plottedLats(list_pix(:,1)),'.k', 'color', 'blue');
+%         waitforbuttonpress
+        
+%         -32: dark green, green; -52: red, yellow; -72: blue, cyan
         getIsolatedAreas
+
 %         light_spr_goes
 %         [area, xy] = area_temp(plottedTemp, plottedLons,plottedLats, fig, writerObj);
-        waitforbuttonpress
+%         waitforbuttonpress
 %         continue
-        % pause(0.01)
+        pause(0.01)
     end
 
     %% Next/Previous data scan
@@ -304,8 +306,8 @@ while(1)
     end
     if fig.CurrentCharacter == 'a'
 %         area_mode = true;
-        getIsolatedAreas
-%         light_spr_goes
+%         getIsolatedAreas
+        light_spr_goes
         n = n - 1; 
         [MM{index}, DD{index}, hh{index}, mm{index}] = subMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
     end
@@ -316,8 +318,8 @@ while(1)
 
 %     set(patch_fov, 'visible', 'off')
     %% Write to video
-%     frame = getframe(fig);
-%     writeVideo(writerObj,frame);
+    frame = getframe(fig);
+    writeVideo(writerObj,frame);
 
     % end
 
