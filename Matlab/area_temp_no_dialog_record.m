@@ -1,4 +1,4 @@
-function [stormarea, pixarea] = area_temp_no_dialog(temp, lons, lats, x, y, T)
+function [stormarea, pixarea] = area_temp_no_dialog_record(temp, lons, lats, x, y, T, fig, writerObj)
 
 fprintf('Processing...\n')
 
@@ -22,8 +22,8 @@ listpix(kp-1,:) = [];
 kp = kp - 1;
 
 while kp>1 %~isempty(listpix)
-    [pixarea k listpix kp] = newtryneighboors(pixarea, k, listpix, kp, outimage, v, T);
-
+%     [pixarea k listpix kp] = newtryneighboors(pixarea, k, listpix, kp, outimage, v, T);
+    [pixarea k listpix kp] = newtryneighboors_record(pixarea, k, listpix, kp, outimage, v, T, lons, lats, fig, writerObj);
     if kp>1
         kp = kp - 1;
         v = listpix(kp,:);
@@ -35,7 +35,7 @@ while kp>1 %~isempty(listpix)
     end
 end
 
-plot(lons(pixarea(:,2)), lats(pixarea(:,1)),'.k', 'Color', 'blue');
+% plot(lons(pixarea(:,2)), lats(pixarea(:,1)),'.k', 'Color', 'black');
 
 area_per_pixel = 2*2;
 stormarea = area_per_pixel * size(pixarea,1);

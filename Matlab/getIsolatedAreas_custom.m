@@ -1,25 +1,31 @@
-%% Setup
-
+%% Preallocate some variables
 if ~exist('setup_isolated_areas', 'var')
     setup_isolated_areas = true;
     
-    prev_labels(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
-%     current_labels(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+    prev_labels(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'region_area',...
+        0, 'minimum_temp', 0, 'min_temp_coord', [], 'mean_temp', 0, 'border', []);
+
     current_centroids = cell(1, 100);
     label_id = 1;
     
-    prev_labels2(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
-%     current_labels2(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+    prev_labels2(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'region_area',...
+    0, 'minimum_temp', 0, 'min_temp_coord', [], 'mean_temp', 0, 'border', []);
+
     current_centroids2 = cell(1, 100);
     label_id2 = 1;
     
-    prev_labels3(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
-%     current_labels3(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'area', 0);
+    prev_labels3(1000) = struct('label', '', 'centroid', [], 'pixels', [], 'region_area',...
+        0, 'minimum_temp', 0, 'min_temp_coord', [], 'mean_temp', 0, 'border', []);
+
     current_centroids3 = cell(1, 100);
     label_id3 = 1;
+    
+    legends = {'Region, Pixels, Area, Dist'};
 end
+%% Process current time
+date_time = strcat(YYYY{index},'-', MM{index},'-', DD{index},'-', hh{index},':', mm{index});
 
-legends = {'Region, Pixels, Area, Dist'};
+%%
 % Set temperatures values to match a color in the imagesc
 tempLabels = plottedTemp;
 plottedTemp(plottedTemp >= T_cover) = warm_mask;
@@ -29,10 +35,10 @@ plottedTemp(plottedTemp <= T_most) = T_most_mask;
 set(temp_plot, 'XData', plottedLons, 'YData', plottedLats, 'CData', plottedTemp);
 %% T_Cover
 
-[CC2, L2] = label_and_filter(tempLabels, plottedLats, plottedLons, T_cover, min_pix_cover, origin, dist_cover);
-[current_labels2, label_id2] = get_regions(prev_labels2, label_id2, CC2, L2);
-% [CC2] = label_and_filter_custom(plottedTemp, plottedLats, plottedLons, T_cover, min_pix_cover, origin, dist_cover);
-% [current_labels2, label_id2] = get_regions_custom(prev_labels2, label_id2, CC2);
+% [CC2, L2] = label_and_filter(tempLabels, plottedLats, plottedLons, T_cover, min_pix_cover, origin, dist_cover);
+% [current_labels2, label_id2] = get_regions(prev_labels2, label_id2, CC2, L2);
+[CC2] = label_and_filter_custom(tempLabels, plottedLats, plottedLons, T_cover, min_pix_cover, origin, dist_cover);
+[current_labels2, label_id2] = get_regions_custom(prev_labels2, label_id2, CC2, tempLabels);
 
 for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
     current_label = str2double(current_region2.label);
@@ -96,17 +102,19 @@ for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}
     current_label2 = str2double(current_region2.label);
     
     [total_pixels, trash] = size(current_region2.pixels(:,2));
-    current_region2.area = total_pixels*4;
+    current_region2.region_area = total_pixels*4;
     
     distance = haversineDist(plottedLats(current_region2.centroid(2)), ...
         plottedLons(current_region2.centroid(1)), ...
         origin(2), ...
         origin(1));
     
-%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: G%d, distance: %.0f km\n', total_pixels, current_region2.area, current_label2, distance);
-    legends{end+1}= sprintf('G%03d, %8d, %8.0f, %8.0f\n', current_label2, total_pixels, current_region2.area, distance);
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: G%d, distance: %.0f km\n', total_pixels, current_region2.region_area, current_label2, distance);
+    legends{end+1}= sprintf('G%03d, %8d, %8.0f, %8.0f\n', current_label2, total_pixels, current_region2.region_area, distance);
 
-    fprintf(fileID ,'%10s, G%03d, %6d, %6.0f, %6.0f\n', date_time, current_label2, total_pixels, current_region2.area, distance);
+    fprintf(fileID ,'%10s, G%03d, %6d, %6.0f, %6.0f, %6.2f, %3i %3i, %6.2f\n',...
+        date_time, current_label2, total_pixels, current_region2.region_area, distance,...
+        current_region2.minimum_temp, current_region2.min_temp_coord, current_region2.mean_temp);
 end
 
 prev_labels2 = current_labels2;
@@ -127,7 +135,7 @@ end
 % [CC, L] = label_and_filter(tempLabels, plottedLats, plottedLons, T_core, min_pix_core, origin, dist_core);
 % [current_labels, label_id] = get_regions(prev_labels, label_id, CC, L);
 [CC] = label_and_filter_custom(tempLabels, plottedLats, plottedLons, T_core, min_pix_core, origin, dist_core);
-[current_labels, label_id] = get_regions_custom(prev_labels, label_id, CC);
+[current_labels, label_id] = get_regions_custom(prev_labels, label_id, CC, tempLabels);
 
 for current_region = current_labels(~cellfun(@isempty, {current_labels.label}))
     current_label = str2double(current_region.label);
@@ -192,16 +200,18 @@ for current_region = current_labels(~cellfun(@isempty, {current_labels.label}))
     current_label = str2double(current_region.label);
     
     [total_pixels, trash] = size(current_region.pixels(:,2));
-    current_region.area = total_pixels*4;
+    current_region.region_area = total_pixels*4;
     
     distance = haversineDist(plottedLats(current_region.centroid(2)), ...
         plottedLons(current_region.centroid(1)), ...
         origin(2), ...
         origin(1));
-%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: C%d, distance: %.0f km\n', total_pixels, current_region.area, current_label, distance);
-    legends{end+1} = sprintf('C%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.area, distance);
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: C%d, distance: %.0f km\n', total_pixels, current_region.region_area, current_label, distance);
+    legends{end+1} = sprintf('C%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.region_area, distance);
     
-    fprintf(fileID,'%10s, C%03d, %6d, %6.0f, %6.0f\n', date_time, current_label, total_pixels, current_region.area, distance);
+    fprintf(fileID,'%10s, C%03d, %6d, %6.0f, %6.0f, %6.2f, %3i %3i, %6.2f\n',...
+        date_time, current_label, total_pixels, current_region.region_area, distance, ...
+        current_region.minimum_temp, current_region.min_temp_coord, current_region.mean_temp);
     
 end
 
@@ -218,10 +228,10 @@ end
 
 %% T most convective
 
-[CC3, L3] = label_and_filter(tempLabels, plottedLats, plottedLons, T_most, min_pix_most, origin, dist_most);
-[current_labels3, label_id3] = get_regions(prev_labels3, label_id3, CC3, L3);
-% [CC3] = label_and_filter_custom(tempLabels, plottedLats, plottedLons, T_most, min_pix_most, origin, dist_most);
-% [current_labels3, label_id3] = get_regions_custom(prev_labels3, label_id3, CC3);
+% [CC3, L3] = label_and_filter(tempLabels, plottedLats, plottedLons, T_most, min_pix_most, origin, dist_most);
+% [current_labels3, label_id3] = get_regions(prev_labels3, label_id3, CC3, L3);
+[CC3] = label_and_filter_custom(tempLabels, plottedLats, plottedLons, T_most, min_pix_most, origin, dist_most);
+[current_labels3, label_id3] = get_regions_custom(prev_labels3, label_id3, CC3, tempLabels);
 
 for current_region = current_labels3(~cellfun(@isempty, {current_labels3.label}))
     current_label = str2double(current_region.label);
@@ -286,17 +296,19 @@ for current_region = current_labels3(~cellfun(@isempty, {current_labels3.label})
     current_label = str2double(current_region.label);
     
     [total_pixels, trash] = size(current_region.pixels(:,2));
-    current_region.area = total_pixels*4;
+    current_region.region_area = total_pixels*4;
     
     distance = haversineDist(plottedLats(current_region.centroid(2)), ...
         plottedLons(current_region.centroid(1)), ...
         origin(2), ...
         origin(1));
     
-%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: M%d, distance: %.0f km\n', total_pixels, current_region.area, current_label, distance);
-    legends{end+1} = sprintf('M%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.area, distance);
+%     fprintf('Pixels: %4d , Area: %6.0f km2, nRegion: M%d, distance: %.0f km\n', total_pixels, current_region.region_area, current_label, distance);
+    legends{end+1} = sprintf('M%03d, %8d, %8.0f, %8.0f\n', current_label, total_pixels, current_region.region_area, distance);
     
-    fprintf(fileID,'%10s, M%03d, %6d, %6.0f, %6.0f\n',date_time, current_label, total_pixels, current_region.area, distance);
+    fprintf(fileID,'%10s, M%03d, %6d, %6.0f, %6.0f, %6.2f, %3i %3i, %6.2f\n',...
+        date_time, current_label, total_pixels, current_region.region_area, distance,...
+        current_region.minimum_temp, current_region.min_temp_coord, current_region.mean_temp);
 end
 
 prev_labels3 = current_labels3;

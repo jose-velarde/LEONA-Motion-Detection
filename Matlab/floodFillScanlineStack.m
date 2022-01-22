@@ -1,4 +1,4 @@
-function [list_pix] = floodFillScanlineStack(x, y, temp, tresholdTemp, tempData, plottedLons, plottedLats, fig, writerObj)
+function [list_pix, border_pix] = floodFillScanlineStack(x, y, temp, tresholdTemp, tempData, plottedLons, plottedLats, fig, writerObj)
 if tresholdTemp == temp
     return;
 end
@@ -6,12 +6,14 @@ end
 h = size(tempData,1);
 w = size(tempData,2);
 stack = zeros(1,2);
-list_pix = zeros(floor(h*w/3),2);
+list_pix = zeros(20000,2);
+border_pix = zeros(200,2);
 
 stack(1,:) = [x y];
 i = 1;
+j = 1;
 while ~isempty(stack)
-
+    
     x = stack(end,1);
     y = stack(end,2);
     stack(end,:) = [];
@@ -24,16 +26,17 @@ while ~isempty(stack)
     x1 = x1 + 1;
     spanAbove = false;
     spanBelow = false;
-    
+    border_pix(j,:) = [y, x1];
+    j = j + 1;
     while x1 <= w && tempData(y, x1) <= tresholdTemp
         list_pix(i,:) = [y x1];
-
-%         plot(plottedLons(x1),plottedLats(y),'.k', 'color', 'blue');
+        
+%         plot(plottedLons(x1),plottedLats(y),'.k', 'color', 'white');
 %         pause(0.00001)
 %         frame = getframe(fig);
 %         writeVideo(writerObj,frame);
-
-        tempData(y, x1) = 20;
+        
+        tempData(y, x1) = 0;
         %% Check top left pixel
         if ~spanAbove && y > 1 && x1 > 1 && tempData((y - 1), (x1-1)) <= tresholdTemp
             stack(end+1,:) = [(x1-1) (y - 1)];
@@ -99,21 +102,23 @@ while ~isempty(stack)
         x1 = x1 + 1;
         
     end
-
+    
 end
 list_pix( ~any(list_pix,2), : ) = [];
+% list_pix = nonzeros(list_pix');
+% list_pix = reshape(v, , )
 end
 
 
 
 % Processing...
-% 1930 pixels in 3.490725 
-% 1930 pixels in 0.038957 
-% 
+% 1930 pixels in 3.490725
+% 1930 pixels in 0.038957
+%
 % Processing...
-% 740 pixels in 1.195686 
-% 740 pixels in 0.028829 
-% 
+% 740 pixels in 1.195686
+% 740 pixels in 0.028829
+%
 % Processing...
-% 1189 pixels in 2.232916 
+% 1189 pixels in 2.232916
 % 1189 pixels in 0.033592

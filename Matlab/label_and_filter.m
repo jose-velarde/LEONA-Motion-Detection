@@ -1,4 +1,4 @@
-function [CC, L] = label_and_filter(temp, lats, lons, T, size, origin, distance)
+function [CC, L] = label_and_filter(temp, lats, lons, T, area, origin, distance)
 % Set data as 0 or 1, 1 being pixels above the threshold
 coreTemp = temp;
 coreTemp(coreTemp <= T) = 1;
@@ -7,7 +7,7 @@ coreTemp(coreTemp ~= 1) = 0;
 
 %% Look for isolated regions smaller than 300 pixels and 1000 km away or less
 CC = bwconncomp(coreTemp, 8);
-CC.PixelIdxList(cellfun(@numel, CC.PixelIdxList) < size) = [];
+CC.PixelIdxList(cellfun(@numel, CC.PixelIdxList) < area) = [];
 CC.NumObjects = numel(CC.PixelIdxList);
 
 regions_info = regionprops(CC, 'basic');
