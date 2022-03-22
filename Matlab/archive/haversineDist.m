@@ -6,7 +6,7 @@ function distance = haversineDist(lat1, lon1, lat2, lon2)
 % where	phi is latitude, lambda is longitude, R is earth's radius (mean radius = 6,371km);
 % note that angles need to be in radians to pass to trig functions!
 
-	R = 6371; % km
+	R = 6378; % km
 	phi1 = lat1 * pi/180; % phi, lambda in radians
 	phi2 = lat2 * pi/180;
 	dPhi = (lat2-lat1) * pi/180;

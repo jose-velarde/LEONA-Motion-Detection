@@ -27,12 +27,12 @@ for kr=r-1:r+1
         value = intersect2(pixarea, rc, 'rows');        % ck if pixarea = rc
         if isempty(value)& outtemp(kr,kc) <= T           
             pixarea(k,:) = [kr kc];
-            plot(lons(pixarea(k,2)), lats(pixarea(k,1)),'.k', 'Color', 'black');
-            frame = getframe(fig);
-            try
-                writeVideo(writerObj,frame);
-            catch
-            end
+            plot(lons(pixarea(k,2)), lats(pixarea(k,1)),'.k', 'Color', 'blue');
+%             frame = getframe(fig);
+%             try
+%                 writeVideo(writerObj,frame);
+%             catch
+%             end
             pause(0.0001)
             listpix(kp,:) = [kr kc];
             k = k+1;

@@ -23,3 +23,6 @@ Gera_GOES-R_latlon_V2.py
 Matlab/*.txt
 Matlab/*.avi
 *.bin
+Matlab/plot_cptec/data_mat/
+Matlab/all_temp_data_13-12-2018.mat
+Matlab/temp_data_13-12-2018.mat
