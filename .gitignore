@@ -23,3 +23,5 @@ Gera_GOES-R_latlon_V2.py
 Matlab/*.txt
 Matlab/*.avi
 *.bin
+Manual review
+triggerframe_list.txt
