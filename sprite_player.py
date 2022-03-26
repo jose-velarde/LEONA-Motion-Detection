@@ -13,21 +13,27 @@ from collections import deque
 from statistics import mean
 
 
-def get_sprites_list():
-    # rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
-    # rootdir = "C:/Users/sauli/OneDrive/Desktop/Videos/Selected"
-    rootdir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
-    # Look for unedited video clips
-    # regexavi = re.compile("(.*)(Positives)(.*)(.*original.avi$)")
-    regexavi = re.compile("(.*.avi$)")
-    sprites_list = []
+def get_clips_in_folder(rootdir: str, clip_type: str):
+    """Search .avi files in @rootdir folder and subfolders
+
+    Args:
+        rootdir (str): Folder to search ending in .../Positives/
+        clip_type (str): Folder name -> 'Clips' or 'Deinterlaced'
+
+    Returns:
+        list: list of fullpath (str)
+    """
+    regexfulldir = re.compile(rf"(.*{clip_type}.*avi$)")
+    file_list = []
+
     for root, dirs, files in os.walk(rootdir):
         for file in files:
-            path = os.path.join(root, file)
-            string_match = regexavi.match(path)
-            if string_match:
-                sprites_list.append(path)
-    return sprites_list
+            fullpath = os.path.join(root, file)
+            if regexfulldir.match(fullpath):
+                file_list.append(fullpath)
+                # print(path, frame_count)
+
+    return file_list
 
 
 def split_frame(frame, n_rows, n_columns):
@@ -100,7 +106,9 @@ def plot_histogram(frames, start, cutout, maxy, imode_flag):
     plt.clf()
 
 
-def thresh_func(frame, mode="bin", threshold=8, block=3, substract=15, close=0, open=0):
+def thresh_func(
+    frame, mode="bin", threshold=8, block=3, substract=15, close_kernel=0, open_kernel=0
+):
     if mode == "bin":
         ret1, th1 = cv2.threshold(frame, threshold, 255, cv2.THRESH_BINARY)
     elif mode == "bin+otsu":
@@ -124,10 +132,10 @@ def thresh_func(frame, mode="bin", threshold=8, block=3, substract=15, close=0, 
         )
         th1 = cv2.bitwise_not(th1)
         ret1 = None
-    if close:
-        th1 = cv2.morphologyEx(th1, cv2.MORPH_CLOSE, np.ones(close, np.uint8))
-    if open:
-        th1 = cv2.morphologyEx(th1, cv2.MORPH_OPEN, np.ones(open, np.uint8))
+    if close_kernel:
+        th1 = cv2.morphologyEx(th1, cv2.MORPH_CLOSE, np.ones(close_kernel, np.uint8))
+    if open_kernel:
+        th1 = cv2.morphologyEx(th1, cv2.MORPH_OPEN, np.ones(open_kernel, np.uint8))
     return ret1, th1
 
 
@@ -163,30 +171,41 @@ color_dict = {
     "17": [128, 0, 0],
 }
 
-video_list = get_sprites_list()
+# full_videos_dir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
+# full_videos_dir = "C:/Users/sauli/OneDrive/Desktop/Videos/Selected"
+full_videos_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/"
+
+footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
+clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+obs_regex = re.compile(rf"({footage_dir})([^\/]*)(.+)")
+observation_folder = obs_regex.match(clips_dir).group(2) + "/"
+
+# clip_type = "Clips"
+clip_type = "Deinterlaced"
+video_list = get_clips_in_folder(clips_dir, clip_type)
 video_index = 0
 
 kernel = np.ones((5, 5), np.uint8)
 imode_flag = True
 
-threshold = 8  # 8
+threshold = 30  # 8
 mode = "bin"
 block = 5
 substract = 10
-close = (10, 2)
-open1 = (3, 3)
+close_kernel = (10, 2)
+open_kernel = (3, 3)
 
-mode2 = "mean"
+mode2 = "bin"
 block2 = 5
 substract2 = 10
-close2 = 0
-open2 = 0
+close_kernel2 = 0
+open_kernel2 = 0
 
-n_rows = 1
-n_columns = 1
+n_rows = 4
+n_columns = 4
 
-min_delta = 70
-window = 15
+min_delta = 50
+window = 5
 
 count_stack = deque(maxlen=window)
 count_stack2 = deque(maxlen=window)
@@ -196,37 +215,41 @@ deinterlace_mode = "discard"
 # deinterlace_mode = "linear"
 
 while True:
-    skip_trigger_flag = True
+    # skip_trigger_flag = True
+    skip_trigger_flag = False
     # break_flag = True
     break_flag = False
     # calibration_flag = True
+    calibration_flag = False
     absdiff_flag = True
     # absdiff_flag = False
-    calibration_flag = False
     # deinterlace_flag = True
     deinterlace_flag = False
-    # deque_flag = True
-    deque_flag = False
+    # average_flag = True
+    average_flag = False
     # labeling_flag = True
     labeling_flag = False
     # colormap_flag = True
     colormap_flag = False
     if video_index == len(video_list):
         video_index = 0
+        
     #! Start video file capture
     pprint("Playing -> {}".format(video_list[video_index]), width=180)
     capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video_list[video_index]))
-    starting_frame = 153000
+    starting_frame = 0
     capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
-    if not os.path.exists("Manual review/{}".format(video_list[video_index][30:-4])):
-        os.makedirs("Manual review/{}".format(video_list[video_index][30:-4]))
-    record_dir = "./Manual review/{}.txt".format(video_list[video_index][30:-4])
-    with open(record_dir, "a") as record_file:
-        print(
-            "New review session initiated from frame number: {}".format(starting_frame),
-            file=record_file,
-        )
+    if not os.path.exists("Manual review/{}".format(observation_folder + clip_type)):
+        os.makedirs("Manual review/{}".format(observation_folder + clip_type))
+    record_dir = "./Manual review/{}.txt".format(observation_folder + clip_type)
+    # with open(record_dir, "a") as record_file:
+    #     print(
+    #         "New review session initiated from frame number: {}".format(starting_frame),
+    #         file=record_file,
+    #     )
+    triggered = False
+
     while True:
         # Listen for inputs
         keyboard = cv2.waitKey(30)
@@ -255,7 +278,15 @@ while True:
             previous_frame = current_frame.copy()
             count_stack.clear()
             #
-            ret1, th1 = thresh_func(current_frame, mode, threshold, block, substract)
+            ret1, th1 = thresh_func(
+                current_frame,
+                mode,
+                threshold,
+                block,
+                substract,
+                close_kernel,
+                open_kernel,
+            )
             previous_sections, previous_count = split_frame(th1, n_rows, n_columns)
 
             if deinterlace_flag:
@@ -277,7 +308,6 @@ while True:
             continue
 
         #! THRESHOLDING
-        # th1 = current_frame.copy()
         # Delete static pixels
         th1 = cv2.absdiff(previous_frame, current_frame)
 
@@ -288,7 +318,7 @@ while True:
         # Threshold
         if not calibration_flag:
             ret1, th1 = thresh_func(
-                th1, mode, threshold, block, substract, close, open1
+                th1, mode, threshold, block, substract, close_kernel, open_kernel
             )
 
             if deinterlace_flag:
@@ -352,10 +382,12 @@ while True:
             sections3, count3 = split_frame(th3, n_rows, n_columns)
 
         #! SHOW FRAMES
-        grid_th1 = th1.copy()
-        draw_grid(grid_th1, n_rows, n_columns)
-        cv2.imshow("Frame", frame)
+        # grid_th1 = th1.copy()
+        # draw_grid(grid_th1, n_rows, n_columns)
         # cv2.imshow("th1", grid_th1)
+        cv2.imshow("Frame", frame)
+        if triggered:
+            keyboard = cv2.waitKey(-1)
 
         # cv2.imshow("th3", equal1)
 
@@ -384,6 +416,7 @@ while True:
             delta_total2 = sum(count2) - sum(previous_count2)
             delta3 = np.subtract(count3, previous_count3)
             delta_total3 = sum(count3) - sum(previous_count3)
+
         if not skip_trigger_flag:
             for rows in range(n_rows):
                 print(
@@ -425,10 +458,14 @@ while True:
                 else:
                     print()
 
-        # if deinterlace_flag:
-        # 	print("---------- total: {}, {}, {} ----------".format(delta_total, delta_total2, delta_total3))
-        # else:
-        # 	print("---------- total: {} ----------".format(delta_total))
+        if deinterlace_flag:
+            print(
+                "---------- total: {}, {}, {} ----------".format(
+                    delta_total, delta_total2, delta_total3
+                )
+            )
+        else:
+            print("---------- total: {} ----------".format(delta_total))
         # Update previous data for next loop
         previous_frame = current_frame.copy()
         previous_sections = sections
@@ -441,9 +478,9 @@ while True:
             previous_sections3 = sections3
             previous_count3 = count3
 
-        if not skip_trigger_flag:
-            if not deque_flag:
-                if any(pixel_diff > 200 for pixel_diff in delta):
+        if not skip_trigger_flag and not triggered:
+            if average_flag:
+                if any(pixel_diff > min_delta for pixel_diff in delta):
                     print("Event triggered, press any key to continue")
                     print(colored("DELTA MODE", "red"))
                     keyboard = cv2.waitKey(-1)
@@ -458,6 +495,7 @@ while True:
                     # count_stack.pop()
                     pprint("Event triggered, press any key to continue")
                     print(colored("AVERAGE+DELTA MODE", "red"))
+                    triggered = True
                     keyboard = cv2.waitKey(-1)
 
         #! INPUT COMMANDS SECTION
@@ -492,17 +530,32 @@ while True:
             cv2.imwrite(p + ".png", frame)
 
         if keyboard == 52:
-            pprint("Go back")
+            pprint("Go back 1 frame")
             capture.set(
-                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) - 90
+                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) - 2
             )
-            # break
+
+        if keyboard == 53:
+            pprint("Log brightest frame")
+            with open(record_dir, "a") as record_file:
+                print(
+                    "{}, {}".format(
+                        video_list[video_index], capture.get(cv2.CAP_PROP_POS_FRAMES)
+                    ),
+                    file=record_file,
+                )
+            triggered = False
+
         if keyboard == 54:
-            pprint("Skip forward")
+            pprint("Skip forward 1 frame")
             capture.set(
-                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) + 90
+                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) + 2
             )
-            # break
+
+        if keyboard == 54:
+            pprint("Skip forward 1 frame")
+            triggered = False
+            
         if keyboard == 49:
             pprint("Previous file")
             video_index -= 1
