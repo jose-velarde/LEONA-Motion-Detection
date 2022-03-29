@@ -209,14 +209,16 @@ ap.add_argument(
 args = vars(ap.parse_args())
 
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/La Maria/"
-path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
+# path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
+path ="C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
+# path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/WIDE FOV CAMERA/"
 video_list = get_videos_list(path)
-
+save_folder = "Footage Review/"
 for video in video_list:
     pprint("Playing -> {}".format(video), width=180)
 
     capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video))
-    starting_frame = 109000
+    starting_frame = 0
     capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
     # initialize key clip writer and the consecutive number of
@@ -240,7 +242,7 @@ for video in video_list:
     n_rows = 4
     n_columns = 4
     # Minimum difference of white pixels between frames to trigger detection
-    min_delta = 100
+    min_delta = 50
     # Number of previous frames taken into account to take the average of white pixel count
     window = 32
     # Pixel count list
@@ -353,12 +355,12 @@ for video in video_list:
                 stacked_image += frame
 
                 if not kcw.recording:
-                    if not os.path.exists("Footage review/{}".format(video[54:74])):
-                        os.makedirs("Footage review/{}".format(video[54:74]))
-                    p = "Footage review/{}/{} - original.avi".format(
-                        video[54:74], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
+                    if not os.path.exists("{}/{}".format(save_folder, video[len(path):-4])):
+                        os.makedirs("{}/{}".format(save_folder, video[len(path):-4]))
+                    p = "{}/{}/{} - original.avi".format(save_folder, 
+                        video[len(path):-4], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
                     )
-                    with open("{}.txt".format(video[54:74]), "w") as file:
+                    with open("{}.txt".format(save_folder, video[len(path):-4]), "w") as file:
                         pass
                     kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
                 # Pause video if trigger ocurred
@@ -387,13 +389,13 @@ for video in video_list:
                 stacked_image += frame
                 # Create video file clip if not recording, insert triggered frame number on file name
                 if not kcw.recording:
-                    if not os.path.exists("Footage review/{}".format(video[54:74])):
-                        os.makedirs("Footage review/{}".format(video[54:74]))
-                        filename = "./Footage review/{}.txt".format(video[54:74])
+                    if not os.path.exists("{}/{}".format(save_folder, video[len(path):-4])):
+                        os.makedirs("{}/{}".format(save_folder, video[len(path):-4]))
+                        filename = "./{}/{}.txt".format(save_folder, video[len(path):-4])
                         with open(filename, "w") as nf:
                             pass
-                    p = "Footage review/{}/{} - original.avi".format(
-                        video[54:74], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
+                    p = "{}/{}/{} - original.avi".format(save_folder, 
+                        video[len(path):-4], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
                     )
 
                     kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
