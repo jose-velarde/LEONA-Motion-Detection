@@ -16,6 +16,10 @@ import re
 
 
 class KeyClipWriter:
+    """Clip recorder class, continuosly records opencv frames to a buffer and writes
+    them to an file when finished
+    """
+
     def __init__(self, bufSize=32, timeout=1.0):
         # store the maximum buffer size of frames to be kept
         # in memory along with the sleep timeout during threading
@@ -94,6 +98,14 @@ class KeyClipWriter:
 
 
 def GroupPixels(image):
+    """Not implemented
+
+    Args:
+        image (list): opencv frame
+
+    Returns:
+        list: opencv frame with colored isolated pixels groups
+    """
     retval, labels = cv2.connectedComponents(image)
     # Filter groups
     N = 50
@@ -116,6 +128,22 @@ def GroupPixels(image):
 def thresh_func(
     frame, mode="bin", threshold=8, block=3, substract=15, close_kernel=0, open_kernel=0
 ):
+    """Apply morphological transformations and thresholding.
+    More about transformations: https://docs.opencv.org/3.4/d9/d61/tutorial_py_morphological_ops.html
+    More about thresholding: https://docs.opencv.org/3.4/d7/d4d/tutorial_py_thresholding.html
+
+    Args:
+        frame (list): opencv frame
+        mode (str, optional): thresholding mode one of bin, bin+otsu, mean, gaussian . Defaults to "bin".
+        threshold (int, optional): pixel brightness threshold, 8 for dark images, larger for brighter images. Defaults to 8.
+        block (int, optional): adaptative threshold parameter. Defaults to 3.
+        substract (int, optional): adaptative threshold parameter. Defaults to 15.
+        close_kernel ((int, int), optional): kernel size, recommended tuple (10,2). Defaults to 0.
+        open_kernel ((int, int), optional): kernel size, recommended tuple (3,3). Defaults to 0.
+
+    Returns:
+        list: opencv frame
+    """
     if mode == "bin":
         ret1, th1 = cv2.threshold(frame, threshold, 255, cv2.THRESH_BINARY)
     elif mode == "bin+otsu":
@@ -147,6 +175,16 @@ def thresh_func(
 
 
 def split_frame(frame, n_rows, n_columns):
+    """Splits the opencv frame
+
+    Args:
+        frame (list): opencv frame
+        n_rows (int): number of rows to split the frame into
+        n_columns (int): number of columns to split the frame into
+
+    Returns:
+        list: opencv frame sections
+    """
     height, width = frame.shape
     roi_height = int(height / n_rows)
     roi_width = int(width / n_columns)
@@ -164,6 +202,13 @@ def split_frame(frame, n_rows, n_columns):
 
 
 def draw_grid(frame, n_rows, n_columns):
+    """Show division lines for each section in a frame
+
+    Args:
+        frame (list): opencv frame
+        n_rows (int): numer of section rows
+        n_columns (int): number of section columns
+    """
     height, width = frame.shape
     roi_height = int(height / n_rows)
     roi_width = int(width / n_columns)
@@ -187,6 +232,14 @@ def draw_grid(frame, n_rows, n_columns):
 
 
 def get_videos_list(rootdir):
+    """Recursively lookup .avi files in rootdir and subfolders to return their full path string in a list
+
+    Args:
+        rootdir (string): path containing video files
+
+    Returns:
+        list: list containing the fullpath of each avi file
+    """
     # Look for unedited video clips
     regexavi = re.compile("(.*.avi$)")
     video_list = []
@@ -210,47 +263,52 @@ args = vars(ap.parse_args())
 
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/La Maria/"
 # path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
-path ="C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
+# path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/WIDE FOV CAMERA/"
+path = "C:/Users/sauli/Downloads/Soft_Tesis/OpenCV"
 video_list = get_videos_list(path)
 save_folder = "Footage Review/"
-for video in video_list:
+for video in [video_list[0]]:
     pprint("Playing -> {}".format(video), width=180)
 
+    # initialize opencv object
     capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video))
     starting_frame = 0
     capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
-    # initialize key clip writer and the consecutive number of
-    # frames that have *not* contained any action
-    kcw = KeyClipWriter(bufSize=args["buffer_size"])
+    # initialize key clip writer (with buffer size)
+    kcw = KeyClipWriter(bufSize=32)
 
-    min_pixel_delta = 50
-
-    stacked_image = 0
-    consec_frames = 0
-    update_consec_frames = False
+    # Triggering mode selection
+    # False: DELTA MODE, 			bright pixel delta > min_delta
+    # True : AVERAGE+DELTA MODE, 	bright pixel count > mean count + min_delta
+    average_flag = True
+    # minimum difference of white pixels between frames to trigger detection
+    min_delta = 50  # 50~100 works alright, increase if it triggers a lot (usually due to house/street lights)
 
     # thresholding function parameters
-    threshold = 30  # 8
+    threshold = 30  # 8 for darker images (i.e. wide Anillaco camera for 14/12/2018)
+    # 30 used for dark images (i.e. narrow Anillaco camera for 14/12/2018)
     mode = "bin"
-    block = 5
-    substract = 10
     close_kernel = (10, 2)
     open_kernel = (3, 3)
+    # set but not used parameters
+    block = 5
+    substract = 10
+
+    # initialize stacked image
+    stacked_image = 0
     # Number of sections to divide the frame
     n_rows = 4
     n_columns = 4
-    # Minimum difference of white pixels between frames to trigger detection
-    min_delta = 50
-    # Number of previous frames taken into account to take the average of white pixel count
+    # number of previous frames taken into account to take the average of white pixel count
     window = 32
-    # Pixel count list
+
+    # initialize a buffer object to store bright pixel count
     count_stack = deque(maxlen=window)
-    # Triggering mode selection
-    # False: DELTA MODE, 			white pixel delta > min_delta
-    # True : AVERAGE+DELTA MODE, 	white pixel count > mean count + min_delta
-    average_flag = True
+    # initialize the consecutive number of frames that have *not* contained any action
+    consec_frames = 0
+    update_consec_frames = False
 
     # keep looping
     while True:
@@ -293,7 +351,7 @@ for video in video_list:
             )
             previous_sections, previous_count = split_frame(th1, n_rows, n_columns)
             continue
-        #! Optional text indicators on video: current frame and recording
+        #! Optional text indicators on video: current frame and recording (OUTDATED)
         # if kcw.recording:
         # 	cv2.rectangle(frame, (600,2), (680,20), (255,255,255), -1)
         # 	cv2.putText(frame, "recording", (605, 15),
@@ -325,6 +383,8 @@ for video in video_list:
                 total += frame_count[section]
             stack_mean.append(int(total / len(count_stack)))
 
+        # * Uncomment to print bright pixels count for: current frame count || delta count || count_mean
+
         # for rows in range(n_rows):
         #     print(" |".join(str(e).rjust(5) for e in count[rows*n_columns:(rows+1)*n_columns]), end = "")
         #     print(colored("    ||", "red"), end = "")
@@ -355,12 +415,18 @@ for video in video_list:
                 stacked_image += frame
 
                 if not kcw.recording:
-                    if not os.path.exists("{}/{}".format(save_folder, video[len(path):-4])):
-                        os.makedirs("{}/{}".format(save_folder, video[len(path):-4]))
-                    p = "{}/{}/{} - original.avi".format(save_folder, 
-                        video[len(path):-4], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
+                    if not os.path.exists(
+                        "{}/{}".format(save_folder, video[len(path) : -4])
+                    ):
+                        os.makedirs("{}/{}".format(save_folder, video[len(path) : -4]))
+                    p = "{}/{}/{} - original.avi".format(
+                        save_folder,
+                        video[len(path) : -4],
+                        int(capture.get(cv2.CAP_PROP_POS_FRAMES)),
                     )
-                    with open("{}.txt".format(save_folder, video[len(path):-4]), "w") as file:
+                    with open(
+                        "{}.txt".format(save_folder, video[len(path) : -4]), "w"
+                    ) as file:
                         pass
                     kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
                 # Pause video if trigger ocurred
@@ -389,13 +455,19 @@ for video in video_list:
                 stacked_image += frame
                 # Create video file clip if not recording, insert triggered frame number on file name
                 if not kcw.recording:
-                    if not os.path.exists("{}/{}".format(save_folder, video[len(path):-4])):
-                        os.makedirs("{}/{}".format(save_folder, video[len(path):-4]))
-                        filename = "./{}/{}.txt".format(save_folder, video[len(path):-4])
+                    if not os.path.exists(
+                        "{}/{}".format(save_folder, video[len(path) : -4])
+                    ):
+                        os.makedirs("{}/{}".format(save_folder, video[len(path) : -4]))
+                        filename = "./{}/{}.txt".format(
+                            save_folder, video[len(path) : -4]
+                        )
                         with open(filename, "w") as nf:
                             pass
-                    p = "{}/{}/{} - original.avi".format(save_folder, 
-                        video[len(path):-4], int(capture.get(cv2.CAP_PROP_POS_FRAMES))
+                    p = "{}/{}/{} - original.avi".format(
+                        save_folder,
+                        video[len(path) : -4],
+                        int(capture.get(cv2.CAP_PROP_POS_FRAMES)),
                     )
 
                     kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
@@ -424,13 +496,17 @@ for video in video_list:
             stacked_image = 0
 
         #! SHOW FRAMES
-        grid_th1 = th1.copy()
-        draw_grid(grid_th1, n_rows, n_columns)
 
+        # show original frame
         cv2.imshow("Frame", frame)
-        cv2.imshow("Gray", th1)
+        # show frame after thresholding, comment to hide
+        cv2.imshow("Threshold", th1)
 
-        # Escape video reproduction
+        # * show frame after thresholding with split lines, uncomment to hide
+        # grid_th1 = th1.copy()
+        # draw_grid(grid_th1, n_rows, n_columns)
+        # cv2.imshow("ThresholdLines", grid_th1)
+
         if keyboard == 49:
             capture.set(
                 cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) - 500
@@ -443,11 +519,12 @@ for video in video_list:
             pprint("Pause at {}".format(capture.get(cv2.CAP_PROP_POS_FRAMES)))
             cv2.waitKey(-1)
 
+        # Escape video reproduction
         if keyboard == 27:
             pprint("Break called")
             break
-    # if we are in the middle of recording a clip, wrap it up
+    # finish recording if any
     if kcw.recording:
         kcw.finish()
-    # do a bit of cleanup
+    # cleanup
     cv2.destroyAllWindows()
