@@ -160,7 +160,7 @@ def deinterlace_clips(folders, deinterlace_flag):
     # deinterlace_mode = "linear"
 
     stacked_image = 0
-    stack_count = 6
+    stack_count = 12
 
     i = 0
     for folder in folders:
@@ -205,7 +205,7 @@ def deinterlace_clips(folders, deinterlace_flag):
 
                     if (capture.get(cv2.CAP_PROP_POS_FRAMES)) >= (
                         32 - stack_count
-                    ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (32 + stack_count):
+                    ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (32):
                         stacked_image += frame
             if not deinterlace_flag:
                 cv2.imwrite(p[:-12] + "stack.png", stacked_image)
@@ -218,7 +218,7 @@ def deinterlace_clips(folders, deinterlace_flag):
 
 
 # Stations = [Anillaco14, LaMaria02, LaMaria29, SantaMaria01, SantaMaria26, SantaMaria28]
-# Stations = [Anillaco12]
+Stations = [Anillaco12]
 Stations_Wide = [
     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2018-12-14_041911_Wide/Positives/",
     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2018-12-14_063933_Wide/Positives/",
@@ -230,14 +230,16 @@ Stations_Narrow = [
     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2018-12-14_041925_Narrow/Positives/",
     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2018-12-14_065722_Narrow/Positives/",
 ]
+
+Stations_HDD = [ "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"]
 # print_video_length()
 Fix_Folder = [
     "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/Clips/"
 ]
 
-deinterlace_flag = True
-# deinterlace_flag = False
+# deinterlace_flag = True
+deinterlace_flag = False
 
 # print_clips_in_folder(Stations[0])
 # generate_clips(Stations, deinterlace_flag)
-deinterlace_clips(Stations_Wide, deinterlace_flag)
+deinterlace_clips(Stations_HDD, deinterlace_flag)
