@@ -175,13 +175,22 @@ color_dict = {
 # full_videos_dir = "C:/Users/sauli/OneDrive/Desktop/Videos/Selected"
 full_videos_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/"
 
-footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
-clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+# footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
+footage_dir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+clips_dir = [
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_04 19 UT - 06 32 UT _ Wide/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 39  UT - 06 43 UT _ Wide/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57  UT - 07 24 UT _ Wide/Positives/",
+]
+clips_dir = clips_dir[0]
+
 obs_regex = re.compile(rf"({footage_dir})([^\/]*)(.+)")
 observation_folder = obs_regex.match(clips_dir).group(2) + "/"
 
 # clip_type = "Clips"
-clip_type = "Deinterlaced"
+# clip_type = "Deinterlaced"
+clip_type = "original"
 video_list = get_clips_in_folder(clips_dir, clip_type)
 video_index = 0
 
@@ -223,22 +232,18 @@ while True:
     calibration_flag = False
     absdiff_flag = True
     # absdiff_flag = False
+    # raw_deinterlace_flag = True
+    raw_deinterlace_flag = False
     # deinterlace_flag = True
     deinterlace_flag = False
     # average_flag = True
     average_flag = False
     # labeling_flag = True
     labeling_flag = False
-    # colormap_flag = True
-    colormap_flag = False
+    colormap_flag = True
+    # colormap_flag = False
     if video_index == len(video_list):
         video_index = 0
-        
-    #! Start video file capture
-    pprint("Playing -> {}".format(video_list[video_index]), width=180)
-    capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video_list[video_index]))
-    starting_frame = 0
-    capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
     if not os.path.exists("Manual review/{}".format(observation_folder + clip_type)):
         os.makedirs("Manual review/{}".format(observation_folder + clip_type))
@@ -248,7 +253,24 @@ while True:
     #         "New review session initiated from frame number: {}".format(starting_frame),
     #         file=record_file,
     #     )
+
+    with open(record_dir, "r") as record_file:
+        done_clips_list = [line.split(", ") for line in record_file.readlines()]
+        done_clips = [
+            video_path.replace("\\", "/") for video_path in done_clips_list[:][0]
+        ]
+        print(video_list[video_index] in done_clips)
+        if video_list[video_index] in done_clips:
+            video_index += 1
+            continue
+
     triggered = False
+
+    #! Start video file capture
+    pprint("Playing -> {}".format(video_list[video_index]), width=180)
+    capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video_list[video_index]))
+    starting_frame = 0
+    capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
     while True:
         # Listen for inputs
@@ -268,7 +290,7 @@ while True:
         cv2.rectangle(current_frame, (0, 420), (710, 465), (0, 0, 0), -1)
 
         #! DEINTERLACE FRAMES, mode = "discard" or mode = "linear"
-        if deinterlace_flag or colormap_flag:
+        if deinterlace_flag or colormap_flag or raw_deinterlace_flag:
             first_field, second_field = deinterlace(deinterlace_mode, frame)
             # cv2.rectangle(first_field, (0, 420), (710,465), (0,0,0), -1)
             # cv2.rectangle(second_field, (0, 420), (710,465), (0,0,0), -1)
@@ -386,19 +408,21 @@ while True:
         # draw_grid(grid_th1, n_rows, n_columns)
         # cv2.imshow("th1", grid_th1)
         cv2.imshow("Frame", frame)
-        if triggered:
-            keyboard = cv2.waitKey(-1)
 
         # cv2.imshow("th3", equal1)
-
+        if raw_deinterlace_flag:
+            cv2.imshow("field 1", first_field)
+            cv2.imshow("field 2", second_field)
         if deinterlace_flag:
             cv2.imshow("th2", th2)
             cv2.imshow("th3", th3)
         if colormap_flag:
-            cv2.imshow("th2", equal11)
-            cv2.imshow("th3", equal22)
+            cv2.imshow("colored 12", equal11)
+            cv2.imshow("colored 2", equal22)
             # cv2.imshow("Frame", colored2)
             # cv2.imshow("th1", colored1)
+        if triggered:
+            keyboard = cv2.waitKey(-1)
         #! BRIGHT PIXEL DELTA CALCULATION
         delta = np.subtract(count, previous_count)
         delta_total = sum(count) - sum(previous_count)
@@ -536,26 +560,35 @@ while True:
             )
 
         if keyboard == 53:
-            pprint("Log brightest frame")
+            pprint("Log brightest frame (1st field")
             with open(record_dir, "a") as record_file:
                 print(
-                    "{}, {}".format(
-                        video_list[video_index], capture.get(cv2.CAP_PROP_POS_FRAMES)
+                    "{}, {}, {}".format(
+                        video_list[video_index],
+                        (capture.get(cv2.CAP_PROP_POS_FRAMES) * 2 - 1),
+                        "field 1",
                     ),
                     file=record_file,
                 )
             triggered = False
 
         if keyboard == 54:
-            pprint("Skip forward 1 frame")
-            capture.set(
-                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) + 2
-            )
-
-        if keyboard == 54:
-            pprint("Skip forward 1 frame")
+            pprint("Log brightest frame (2nd field")
+            with open(record_dir, "a") as record_file:
+                print(
+                    "{}, {}, {}".format(
+                        video_list[video_index],
+                        (capture.get(cv2.CAP_PROP_POS_FRAMES) * 2),
+                        "field 2",
+                    ),
+                    file=record_file,
+                )
             triggered = False
-            
+
+        if keyboard == 55:
+            pprint("Continue playing after trigger")
+            triggered = False
+
         if keyboard == 49:
             pprint("Previous file")
             video_index -= 1
