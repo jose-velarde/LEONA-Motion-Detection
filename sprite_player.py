@@ -425,7 +425,7 @@ while True:
             cv2.imshow("th2", th2)
             cv2.imshow("th3", th3)
         if colormap_flag:
-            cv2.imshow("colored 12", equal11)
+            cv2.imshow("colored 1", equal11)
             cv2.imshow("colored 2", equal22)
             # cv2.imshow("Frame", colored2)
             # cv2.imshow("th1", colored1)
