@@ -262,10 +262,11 @@ ap.add_argument(
 args = vars(ap.parse_args())
 
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/La Maria/"
-path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
+# path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/WIDE FOV CAMERA/"
 # path = "C:/Users/sauli/Downloads/Soft_Tesis/OpenCV"
+path = "C:\Users\Rede LEONA\Downloads\Jose Downloads\Videos from LEONA2 HD\Anillaco 2018-12-14\WIDE FOV CAMERA"
 video_list = get_videos_list(path)
 save_folder = "Footage Review/"
 for video in [video_list[0]]:

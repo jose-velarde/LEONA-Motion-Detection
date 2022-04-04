@@ -6,6 +6,7 @@ from constants import *
 
 
 def print_video_length():
+    """outdated"""
     regexfulldir = re.compile("(.*Positives.*avi$)")
     regexstation = re.compile(r"(.*?\\)(.*?)(\d+-\d+-\d+)(\\.*?)")
     # rootdir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV"
@@ -23,60 +24,8 @@ def print_video_length():
                 # print(os.path.join(root,file))
 
 
-dirlistpc = [
-    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/018-12-13_235655_533/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Anillaco 14-11-2019/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/La Maria 02-10-2019/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/La Maria 29-10-2019/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 01-11-2019/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 26-10-2019/Positives/",
-    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 28-10-2019/Positives/",
-]
-
-filelisthdd = [
-    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/2018-12-13_235655_533(01 56UT--04 08UT).avi",
-    "E:/Campanha-2019/Anillaco/14-11-2019/2019-11-14_020120_JV_W.avi",
-    "E:/Campanha-2019/La Maria/02-10-2019/2019-10-02_014427_JV.avi",
-    "E:/Campanha-2019/La Maria/29-10-2019/2019-10-29_002852_JV.avi",
-    "E:/Campanha-2019/Santa Maria/01-11-2019/2019-11-01_222054_JV.avi",
-    "E:/Campanha-2019/Santa Maria/26-10-2019/2019-10-26_213353_JV_NAOAPAGAR.avi",
-    "E:/Campanha-2019/Santa Maria/28-10-2019/2019-10-28_194528_JV_NAOAPAGAR.avi",
-]
-
-hddlist = [
-    "E:/Campanha-2019/Anillaco/14-11-2019/2019-11-14_020120_JV_W.avi",
-    "E:/Campanha-2019/La Maria/02-10-2019/2019-10-02_014427_JV.avi",
-    "E:/Campanha-2019/La Maria/24-10-2019/2019-10-24_210457_563.avi",
-    "E:/Campanha-2019/La Maria/29-10-2019/2019-10-29_002852_JV.avi",
-    "E:/Campanha-2019/Santa Maria/01-11-2019/2019-11-01_222054_JV.avi",
-    "E:/Campanha-2019/Santa Maria/08-11-2019/2019-11-08_202545_JV.avi",
-    "E:/Campanha-2019/Santa Maria/08-11-2019/2019-11-09_005913_JV.avi",
-    "E:/Campanha-2019/Santa Maria/18-10-2019/2019-10-19_012100_JV_SEMDADOS.avi",
-    "E:/Campanha-2019/Santa Maria/24-10-2019/2019-10-24_212139_454.avi",
-    "E:/Campanha-2019/Santa Maria/26-10-2019/2019-10-26_213353_JV_NAOAPAGAR.avi",
-    "E:/Campanha-2019/Santa Maria/28-10-2019/2019-10-28_194528_JV_NAOAPAGAR.avi",
-]
-
-
-def deinterlace(mode, frame):
-    first_field = frame.copy()
-    second_field = frame.copy()
-    if mode == "discard":
-        first_field[1:-1:2] = 0
-        second_field[2:-1:2] = 0
-    elif mode == "linear":
-        first_field[1:-1:2] = frame[0:-2:2] / 2 + frame[2::2] / 2
-        second_field[2:-1:2] = frame[1:-2:2] / 2 + frame[3::2] / 2
-    return first_field, second_field
-
-
 def generate_clips(stations, deinterlace_flag):
-    """Generate clips (normal or deinterlaced) from the original video files
-
-    Args:
-        stations (list): list of folder strings
-        deinterlace_flag (bool): deinterlace clip if true
-    """
+    """outdated"""
     deinterlace_mode = "discard"
     # deinterlace_mode = "linear"
     previous_frames = 32
@@ -154,13 +103,24 @@ def get_clips_in_folder(rootdir):
     return file_list
 
 
-def deinterlace_clips(folders, deinterlace_flag):
+def deinterlace(mode, frame):
+    first_field = frame.copy()
+    second_field = frame.copy()
+    if mode == "discard":
+        first_field[1:-1:2] = 0
+        second_field[2:-1:2] = 0
+    elif mode == "linear":
+        first_field[1:-1:2] = frame[0:-2:2] / 2 + frame[2::2] / 2
+        second_field[2:-1:2] = frame[1:-2:2] / 2 + frame[3::2] / 2
+    return first_field, second_field
+
+
+def deinterlace_clips(folders, deinterlace_flag, trigger_frame, stack_count):
 
     deinterlace_mode = "discard"
     # deinterlace_mode = "linear"
 
     stacked_image = 0
-    stack_count = 12
 
     i = 0
     for folder in folders:
@@ -174,19 +134,29 @@ def deinterlace_clips(folders, deinterlace_flag):
             capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(clip_path))
 
             if deinterlace_flag:
-                p = "{}Deinterlaced/{} - deinterlaced.avi".format(
+                p = "{}Deinterlaced/{} - ".format(
                     clip_path[:folder_len], clip_path[folder_len:-15]
                 )
+
+                if not os.path.exists("{}Deinterlaced".format(clip_path[:folder_len])):
+                    os.makedirs("{}Deinterlaced".format(clip_path[:folder_len]))
+
                 writer = cv2.VideoWriter(
-                    p, 0, 60, (int(capture.get(3)), int(capture.get(4)))
+                    p + "deinterlaced.avi",
+                    0,
+                    60,
+                    (int(capture.get(3)), int(capture.get(4))),
                 )
             else:
-                p = "{}Clips/{} - original.avi".format(
+                p = "{}Clips/{} - ".format(
                     clip_path[:folder_len], clip_path[folder_len:-15]
                 )
 
                 writer = cv2.VideoWriter(
-                    p, 0, 30, (int(capture.get(3)), int(capture.get(4)))
+                    p + "original.avi",
+                    0,
+                    30,
+                    (int(capture.get(3)), int(capture.get(4))),
                 )
             print(p)
             while True:
@@ -197,19 +167,28 @@ def deinterlace_clips(folders, deinterlace_flag):
                     first_field, second_field = deinterlace(deinterlace_mode, frame)
                     writer.write(first_field)
                     writer.write(second_field)
-                else:
-                    # print(ret)
-                    writer.write(frame)
-                    # cv2.imshow("Frame", frame)
-                    # cv2.waitKey(-1)
+
+                    if capture.get(cv2.CAP_PROP_POS_FRAMES) == trigger_frame:
+                        cv2.imwrite(p + "field_1.png", first_field)
+                        cv2.imwrite(p + "field_2.png", second_field)
 
                     if (capture.get(cv2.CAP_PROP_POS_FRAMES)) >= (
-                        32 - stack_count
-                    ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (32):
+                        (trigger_frame - 1) - stack_count
+                    ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (trigger_frame - 1):
+                        stacked_image += first_field
+                        stacked_image += second_field
+                else:
+                    writer.write(frame)
+
+                    if (capture.get(cv2.CAP_PROP_POS_FRAMES)) >= (
+                        trigger_frame - stack_count
+                    ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (
+                        trigger_frame + stack_count
+                    ):
                         stacked_image += frame
-            if not deinterlace_flag:
-                cv2.imwrite(p[:-12] + "stack.png", stacked_image)
-                stacked_image = 0
+
+            cv2.imwrite(p + "stack.png", stacked_image)
+            stacked_image = 0
 
             writer.release()
             cv2.destroyAllWindows()
@@ -231,15 +210,53 @@ Stations_Narrow = [
     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2018-12-14_065722_Narrow/Positives/",
 ]
 
-Stations_HDD = [ "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"]
+Stations_HDD = [
+    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+]
 # print_video_length()
 Fix_Folder = [
     "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/Clips/"
 ]
 
-# deinterlace_flag = True
-deinterlace_flag = False
+Stations_Wide_BR = [
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_04 19 UT - 06 32 UT _ Wide/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 39  UT - 06 43 UT _ Wide/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57  UT - 07 24 UT _ Wide/Positives/",
+]
+
+Stations_Narrow_BR = [
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_03 35 UT - 04 08 UT _ Narrow/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_04 19 UT - 06 32 UT _ Narrow/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 39 UT _ 06 43 UT _ Narrow/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57 UT - 07 24 UT _ Narrow/Positives/",
+]
+Stations_Elves_BR = [
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_04 19 UT - 06 32 UT _ Narrow/Elves/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_04 19 UT - 06 32 UT _ Wide/Elves/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57  UT - 07 24 UT _ Wide/Elves/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57 UT - 07 24 UT _ Narrow/Elves/",
+]
+
+Old_Positive_Clips = [
+    # "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2019-11-14/Positives/Clips/",
+    # "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-11-01/Positives/Clips/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-10-28/Positives/Clips/",
+    # "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/La Maria/2019-10-29/Positives/Clips/",
+    # "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-10-26/Positives/Clips/",
+]
+
+Old_False_Positive_Clips = [
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Anillaco/2019-11-14/False positives/Clips/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-11-01/False positives/Clips/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-10-28/False positives/Clips/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/La Maria/2019-10-29/False positives/Clips/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Reviewed nights/Santa Maria/2019-10-26/False positives/Clips/",
+]
+deinterlace_flag = True
+# deinterlace_flag = False
 
 # print_clips_in_folder(Stations[0])
 # generate_clips(Stations, deinterlace_flag)
-deinterlace_clips(Stations_HDD, deinterlace_flag)
+deinterlace_clips(
+    Old_Positive_Clips, deinterlace_flag, trigger_frame=32, stack_count=12
+)

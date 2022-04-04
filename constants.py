@@ -1,3 +1,37 @@
+dirlistpc = [
+    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/018-12-13_235655_533/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Anillaco 14-11-2019/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/La Maria 02-10-2019/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/La Maria 29-10-2019/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 01-11-2019/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 26-10-2019/Positives/",
+    "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Santa Maria 28-10-2019/Positives/",
+]
+
+filelisthdd = [
+    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/2018-12-13_235655_533(01 56UT--04 08UT).avi",
+    "E:/Campanha-2019/Anillaco/14-11-2019/2019-11-14_020120_JV_W.avi",
+    "E:/Campanha-2019/La Maria/02-10-2019/2019-10-02_014427_JV.avi",
+    "E:/Campanha-2019/La Maria/29-10-2019/2019-10-29_002852_JV.avi",
+    "E:/Campanha-2019/Santa Maria/01-11-2019/2019-11-01_222054_JV.avi",
+    "E:/Campanha-2019/Santa Maria/26-10-2019/2019-10-26_213353_JV_NAOAPAGAR.avi",
+    "E:/Campanha-2019/Santa Maria/28-10-2019/2019-10-28_194528_JV_NAOAPAGAR.avi",
+]
+
+hddlist = [
+    "E:/Campanha-2019/Anillaco/14-11-2019/2019-11-14_020120_JV_W.avi",
+    "E:/Campanha-2019/La Maria/02-10-2019/2019-10-02_014427_JV.avi",
+    "E:/Campanha-2019/La Maria/24-10-2019/2019-10-24_210457_563.avi",
+    "E:/Campanha-2019/La Maria/29-10-2019/2019-10-29_002852_JV.avi",
+    "E:/Campanha-2019/Santa Maria/01-11-2019/2019-11-01_222054_JV.avi",
+    "E:/Campanha-2019/Santa Maria/08-11-2019/2019-11-08_202545_JV.avi",
+    "E:/Campanha-2019/Santa Maria/08-11-2019/2019-11-09_005913_JV.avi",
+    "E:/Campanha-2019/Santa Maria/18-10-2019/2019-10-19_012100_JV_SEMDADOS.avi",
+    "E:/Campanha-2019/Santa Maria/24-10-2019/2019-10-24_212139_454.avi",
+    "E:/Campanha-2019/Santa Maria/26-10-2019/2019-10-26_213353_JV_NAOAPAGAR.avi",
+    "E:/Campanha-2019/Santa Maria/28-10-2019/2019-10-28_194528_JV_NAOAPAGAR.avi",
+]
+
 Anillaco12 = [
     [109095, 66.0],
     [112885, 66.0],
