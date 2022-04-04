@@ -262,10 +262,10 @@ ap.add_argument(
 args = vars(ap.parse_args())
 
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/La Maria/"
-# path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
+path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/WIDE FOV CAMERA/"
-path = "C:/Users/sauli/Downloads/Soft_Tesis/OpenCV"
+# path = "C:/Users/sauli/Downloads/Soft_Tesis/OpenCV"
 video_list = get_videos_list(path)
 save_folder = "Footage Review/"
 for video in [video_list[0]]:
@@ -287,8 +287,8 @@ for video in [video_list[0]]:
     min_delta = 50  # 50~100 works alright, increase if it triggers a lot (usually due to house/street lights)
 
     # thresholding function parameters
-    threshold = 30  # 8 for darker images (i.e. wide Anillaco camera for 14/12/2018)
-    # 30 used for dark images (i.e. narrow Anillaco camera for 14/12/2018)
+    threshold = 30  # 30 for darker images (i.e. wide Anillaco camera for 14/12/2018)
+    # 8 used for dark images (i.e. narrow Anillaco camera for 14/12/2018)
     mode = "bin"
     close_kernel = (10, 2)
     open_kernel = (3, 3)

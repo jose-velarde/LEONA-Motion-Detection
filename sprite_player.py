@@ -176,12 +176,19 @@ color_dict = {
 full_videos_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/"
 
 footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
-clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
+clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-14 Clips Anillaco/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-01 Clips Santa Maria/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-29 Clips La Maria/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-28 Clips Santa Maria/"
+# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-26 Clips Santa Maria/"
+
 obs_regex = re.compile(rf"({footage_dir})([^\/]*)(.+)")
 observation_folder = obs_regex.match(clips_dir).group(2) + "/"
 
 # clip_type = "Clips"
-clip_type = "Deinterlaced"
+# clip_type = "Deinterlaced"
+clip_type = "original"
 video_list = get_clips_in_folder(clips_dir, clip_type)
 video_index = 0
 
@@ -233,7 +240,7 @@ while True:
     colormap_flag = False
     if video_index == len(video_list):
         video_index = 0
-        
+
     #! Start video file capture
     pprint("Playing -> {}".format(video_list[video_index]), width=180)
     capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video_list[video_index]))
@@ -387,6 +394,7 @@ while True:
         # cv2.imshow("th1", grid_th1)
         cv2.imshow("Frame", frame)
         if triggered:
+            print("Current frame is {}".format(capture.get(cv2.CAP_PROP_POS_FRAMES)))
             keyboard = cv2.waitKey(-1)
 
         # cv2.imshow("th3", equal1)
@@ -481,7 +489,11 @@ while True:
         if not skip_trigger_flag and not triggered:
             if average_flag:
                 if any(pixel_diff > min_delta for pixel_diff in delta):
-                    print("Event triggered, press any key to continue")
+                    print(
+                        "Event triggered at {}, press any key to continue".format(
+                            capture.get(cv2.CAP_PROP_POS_FRAMES)
+                        )
+                    )
                     print(colored("DELTA MODE", "red"))
                     keyboard = cv2.waitKey(-1)
             else:
@@ -493,7 +505,11 @@ while True:
                     and len(count_stack) == window
                 ):
                     # count_stack.pop()
-                    pprint("Event triggered, press any key to continue")
+                    pprint(
+                        "Event triggered at {}, press any key to continue".format(
+                            capture.get(cv2.CAP_PROP_POS_FRAMES)
+                        )
+                    )
                     print(colored("AVERAGE+DELTA MODE", "red"))
                     triggered = True
                     keyboard = cv2.waitKey(-1)
@@ -547,15 +563,9 @@ while True:
             triggered = False
 
         if keyboard == 54:
-            pprint("Skip forward 1 frame")
-            capture.set(
-                cv2.CAP_PROP_POS_FRAMES, capture.get(cv2.CAP_PROP_POS_FRAMES) + 2
-            )
-
-        if keyboard == 54:
-            pprint("Skip forward 1 frame")
+            pprint("Continue playing")
             triggered = False
-            
+
         if keyboard == 49:
             pprint("Previous file")
             video_index -= 1
