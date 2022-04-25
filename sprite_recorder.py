@@ -1,4 +1,5 @@
 # import the necessary packages
+from ast import arg
 from collections import deque
 from threading import Thread
 from queue import Queue
@@ -42,7 +43,7 @@ class KeyClipWriter:
             self.Q.put(frame)
 
     # kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
-    def start(self, outputPath, fourcc, fps):
+    def start(self, outputPath, fps):
         # indicate that we are recording, start the video writer,
         # and initialize the queue of frames that need to be written
         # to the video file
@@ -252,43 +253,79 @@ def get_videos_list(rootdir):
     return video_list
 
 
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-f", "--fps", type=int, default=30, help="FPS of output video")
-ap.add_argument("-c", "--codec", type=str, default="mp4v", help="codec of output video")
-ap.add_argument(
-    "-b", "--buffer-size", type=int, default=32, help="buffer size of video clip writer"
-)
-args = vars(ap.parse_args())
-
+# CheckedP Paths
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/La Maria/"
 # path = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/NARROW FOV CAMERA/"
 # path = "C:/Users/Rede LEONA/Downloads/Jose Downloads/Videos from LEONA2 HD/Anillaco 2018-12-14/WIDE FOV CAMERA/"
 # path = "C:/Users/sauli/Downloads/Soft_Tesis/OpenCV"
-path = "C:\Users\Rede LEONA\Downloads\Jose Downloads\Videos from LEONA2 HD\Anillaco 2018-12-14\WIDE FOV CAMERA"
-video_list = get_videos_list(path)
+# path = "C:\Users\Rede LEONA\Downloads\Jose Downloads\Videos from LEONA2 HD\Anillaco 2018-12-14\WIDE FOV CAMERA"
+path = "C:/Users/sauli/Dropbox/Propuesta/First meeting/clips deinterlaced/2019-11-14 Clips Anillaco/Original/"
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--path", type=str, default=path, help="Video files folder")
+ap.add_argument("-f", "--fps", type=int, default=30, help="FPS of output video")
+ap.add_argument(
+    "-b",
+    "--buffer",
+    type=int,
+    default=32,
+    help="Buffer size, quantity of previous frames",
+)
+ap.add_argument(
+    "-T", "--timeout", type=int, default=1, help="Seconds to record after trigger"
+)
+ap.add_argument(
+    "-t",
+    "--threshold",
+    type=int,
+    default=8,
+    help="Brightness threshold parameter [0-255]",
+)
+ap.add_argument(
+    "-d",
+    "--delta",
+    type=int,
+    default=50,
+    help="Difference in quantity of pixels between consecutive frames to trigger detection",
+)
+ap.add_argument(
+    "-r", "--rows", type=int, default=4, help="Number of rows to split each frame"
+)
+ap.add_argument(
+    "-c", "--columns", type=int, default=4, help="Number of columns to split each frame"
+)
+
+args = vars(ap.parse_args())
+print(args)
+
+video_list = get_videos_list(args["path"])
+print(video_list)
 save_folder = "Footage Review/"
-for video in [video_list[0]]:
+for video in video_list:
     pprint("Playing -> {}".format(video), width=180)
 
-    # initialize opencv object
+    # initialize opencv video capture object
     capture = cv2.VideoCapture(cv2.samples.findFileOrKeep(video))
     starting_frame = 0
     capture.set(cv2.CAP_PROP_POS_FRAMES, starting_frame)
 
-    # initialize key clip writer (with buffer size)
-    kcw = KeyClipWriter(bufSize=32)
+    # initialize clip writer object (with buffer size)
+    kcw = KeyClipWriter(bufSize=args["buffer"], timeout=args["timeout"])
 
     # Triggering mode selection
     # False: DELTA MODE, 			bright pixel delta > min_delta
     # True : AVERAGE+DELTA MODE, 	bright pixel count > mean count + min_delta
     average_flag = True
     # minimum difference of white pixels between frames to trigger detection
-    min_delta = 50  # 50~100 works alright, increase if it triggers a lot (usually due to house/street lights)
+    min_delta = args[
+        "delta"
+    ]  # 50~100 works alright, increase if it triggers a lot (usually due to house/street lights)
 
     # thresholding function parameters
-    threshold = 30  # 30 for darker images (i.e. wide Anillaco camera for 14/12/2018)
+    threshold = args[
+        "threshold"
+    ]  # 30 for darker images (i.e. wide Anillaco camera for 14/12/2018)
     # 8 used for dark images (i.e. narrow Anillaco camera for 14/12/2018)
     mode = "bin"
     close_kernel = (10, 2)
@@ -300,8 +337,8 @@ for video in [video_list[0]]:
     # initialize stacked image
     stacked_image = 0
     # Number of sections to divide the frame
-    n_rows = 4
-    n_columns = 4
+    n_rows = args["rows"]
+    n_columns = args["columns"]
     # number of previous frames taken into account to take the average of white pixel count
     window = 32
 
@@ -429,7 +466,7 @@ for video in [video_list[0]]:
                         "{}.txt".format(save_folder, video[len(path) : -4]), "w"
                     ) as file:
                         pass
-                    kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
+                    kcw.start(p, args["fps"])
                 # Pause video if trigger ocurred
                 # keyboard = cv2.waitKey(-1)
         else:
@@ -471,7 +508,7 @@ for video in [video_list[0]]:
                         int(capture.get(cv2.CAP_PROP_POS_FRAMES)),
                     )
 
-                    kcw.start(p, cv2.VideoWriter_fourcc(*args["codec"]), args["fps"])
+                    kcw.start(p, args["fps"])
                 # Pause video if trigger ocurred
                 # keyboard = cv2.waitKey(-1)
 
@@ -487,7 +524,7 @@ for video in [video_list[0]]:
         kcw.update(frame)
         # if we are recording and reached a threshold on consecutive
         # number of frames with no triggers, stop recording the clip
-        if kcw.recording and consec_frames == args["buffer_size"]:
+        if kcw.recording and consec_frames == args["buffer"]:
             # print("stop recording at ", capture.get(cv2.CAP_PROP_POS_FRAMES))
             # print("stop recording")
             kcw.finish()
@@ -501,12 +538,12 @@ for video in [video_list[0]]:
         # show original frame
         cv2.imshow("Frame", frame)
         # show frame after thresholding, comment to hide
-        cv2.imshow("Threshold", th1)
+        # cv2.imshow("Threshold", th1)
 
         # * show frame after thresholding with split lines, uncomment to hide
-        # grid_th1 = th1.copy()
-        # draw_grid(grid_th1, n_rows, n_columns)
-        # cv2.imshow("ThresholdLines", grid_th1)
+        grid_th1 = th1.copy()
+        draw_grid(grid_th1, n_rows, n_columns)
+        cv2.imshow("ThresholdLines", grid_th1)
 
         if keyboard == 49:
             capture.set(

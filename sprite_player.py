@@ -177,11 +177,13 @@ full_videos_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/Videos/"
 
 footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
 # clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2018-12-13_235655_533/Positives/"
-clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-14 Clips Anillaco/"
-# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-01 Clips Santa Maria/"
-# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-29 Clips La Maria/"
-# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-28 Clips Santa Maria/"
-# clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-26 Clips Santa Maria/"
+clips_dir = [
+    # "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-14 Clips Anillaco/",
+    # "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-11-01 Clips Santa Maria/",
+    # "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-29 Clips La Maria/",
+    # "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-28 Clips Santa Maria/",
+    "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-26 Clips Santa Maria/",
+]
 
 # footage_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/"
 # footage_dir = "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/"
@@ -191,7 +193,7 @@ clips_dir = "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detectio
 #     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 39  UT - 06 43 UT _ Wide/Positives/",
 #     "C:/Users/Rede LEONA/Downloads/Jose Downloads/OpenCV/Footage review/2018-12-14_06 57  UT - 07 24 UT _ Wide/Positives/",
 # ]
-# clips_dir = clips_dir[0]
+clips_dir = clips_dir[0]
 
 obs_regex = re.compile(rf"({footage_dir})([^\/]*)(.+)")
 observation_folder = obs_regex.match(clips_dir).group(2) + "/"
@@ -261,16 +263,19 @@ while True:
     #         "New review session initiated from frame number: {}".format(starting_frame),
     #         file=record_file,
     #     )
+    try:
+        with open(record_dir, "r+") as record_file:
+            done_clips_list = [line.split(", ") for line in record_file.readlines()]
+            done_clips = [
+                video_path.replace("\\", "/") for video_path in done_clips_list[:][0]
+            ]
+            print(video_list[video_index] in done_clips)
+            if video_list[video_index] in done_clips:
+                video_index += 1
+                continue
+    except:
+        pass
 
-    with open(record_dir, "r") as record_file:
-        done_clips_list = [line.split(", ") for line in record_file.readlines()]
-        done_clips = [
-            video_path.replace("\\", "/") for video_path in done_clips_list[:][0]
-        ]
-        print(video_list[video_index] in done_clips)
-        if video_list[video_index] in done_clips:
-            video_index += 1
-            continue
 
     triggered = False
 
