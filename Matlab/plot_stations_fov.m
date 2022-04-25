@@ -3,12 +3,11 @@
 
 current_time = str2double(strcat(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}));
 
-if isAfter(current_time, 201911130500)...
-        && isBefore(current_time, 201911140500)
+if index == 1 && isBefore(current_time, 201911140500)
     origin = [stations_lon(2), stations_lat(2)];
     radius = 5 ;
 
-    azimuth = 150;
+    azimuth = 143.24;
     plot_fov(patch_fov, origin, azimuth, radius, 'red');
 end
 
@@ -17,7 +16,7 @@ if isAfter(current_time, 201911140500)...
     origin = [stations_lon(2), stations_lat(2)];
     radius = 5 ;
 
-    azimuth = 150;
+    azimuth = 143.24;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
 
@@ -26,12 +25,29 @@ if isAfter(current_time, 201911140600)...
     origin = [stations_lon(2), stations_lat(2)];
     radius = 5 ;
 
-    azimuth = 155;
+    azimuth = 141;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
+
+if index == 1 && isAfter(current_time, 201911140800)
+    origin = [stations_lon(2), stations_lat(2)];
+    radius = 5 ;
+
+    azimuth = 141;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
+
 %% Night (2): 01:00 -> 04:00 195 SMS 1
 % Night (2): 04:00 -> 08:00 180 SMS
 
+if index == 2 && isBefore(current_time, 201911020100)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+    
+    azimuth = 195;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
 
 if isAfter(current_time, 201911020100)...
         && isBefore(current_time, 201911020400)
@@ -50,10 +66,17 @@ if isAfter(current_time, 201911020400)...
     azimuth = 180;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
+
+if index == 2 && isAfter(current_time, 201911020800)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+
+    azimuth = 180;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
 %% Night (3) - SMS 1
 
-if isAfter(current_time, 201910271300)...
-        && isBefore(current_time, 201910282300)
+if index == 3 && isAfter(current_time, 201910282300)
     origin = [stations_lon(1), stations_lat(1)];
     radius = 10 ;   % 1 degree ~110km
 
@@ -105,7 +128,24 @@ if isAfter(current_time, 201910290500)...
     azimuth = 235;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
+
+if index == 3 && isAfter(current_time, 201910290830)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+
+    azimuth = 235;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
 % Night (3) - La Maria 3
+if index == 3 && isBefore(current_time, 201910290400)
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 4.5 ;   % 1 degree ~110km
+
+    azimuth = 130;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
 % Night (3): 04:00 -> 06:00 130 La Maria 3
 if isAfter(current_time, 201910290400)...
         && isBefore(current_time, 201910290600)
@@ -124,8 +164,24 @@ if isAfter(current_time, 201910290600)...
     azimuth = 120;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
+
+if index == 3 && isAfter(current_time, 201910290830)
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 4.5 ;   % 1 degree ~110km
+
+    azimuth = 120;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
 %% Night (4): 250 SMS 1
 % Night (4): 00:30 -> 01:30 250 SMS 1
+if index == 4 && isBefore(current_time, 201910270030)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
+
+    azimuth = 250;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
 if isAfter(current_time, 201910270030)...
         && isBefore(current_time, 201910270130)
     origin = [stations_lon(1), stations_lat(1)];
@@ -134,8 +190,15 @@ if isAfter(current_time, 201910270030)...
     azimuth = 250;
     plot_fov(patch_fov, origin, azimuth, radius, 'green');
 end
+if index == 4 && isAfter(current_time, 201910270130)
+    origin = [stations_lon(1), stations_lat(1)];
+    radius = 10 ;   % 1 degree ~110km
 
-% Night (5): La Maria 3
+    azimuth = 250;
+    plot_fov(patch_fov, origin, azimuth, radius, 'red');
+end
+
+%% Night (5): La Maria 3
 % Night (5): 05:00 -> 06:00 90 La Maria 3
 if isAfter(current_time, 201910020500)...
         && isBefore(current_time, 201910020600)
@@ -187,10 +250,18 @@ end
 if isAfter(current_time, 201812140630)...
         && isBefore(current_time, 201812140645)
     origin = [stations_lon(3), stations_lat(3)];
-    radius = 4.5 ;   % 1 degree ~110km
+    radius = 3.6 ;   % 1 degree ~110km
 
     azimuth = 180;
-    plot_fov(patch_fov, origin, azimuth, radius, 'green');
+    plot_fov(patch_fov2, origin, azimuth, radius, 'green');
+end
+
+if index == 6 && isAfter(current_time, 201812140645)
+    origin = [stations_lon(3), stations_lat(3)];
+    radius = 3.6 ;   % 1 degree ~110km
+
+    azimuth = 180;
+    plot_fov(patch_fov2, origin, azimuth, radius, 'red');
 end
 
 if index == 6 && isAfter(current_time, 201812140730)

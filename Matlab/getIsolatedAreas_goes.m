@@ -47,16 +47,16 @@ if strcmp(t_cover, 'Yes')
     [CC2] = label_and_filter_custom(tempLabels, lts, lns, T_cover, min_pix_cover, origin, dist_cover);
     [current_labels2, label_id2] = get_regions_custom(prev_labels2, label_id2, CC2, tempLabels);
 
-    for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
-        current_label = str2double(current_region2.label);
+    for current_region = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+        current_label = str2double(current_region.label);
 
         label_already_in = label_in_labels(current_label, prev_labels2);
 
         if label_already_in
-            set(region_plot2(current_label), 'XData', lns(current_region2.pixels(:, 2)), 'YData', lts(current_region2.pixels(:, 1)))
+            set(region_plot2(current_label), 'XData', lns(current_region.pixels(:, 2)), 'YData', lts(current_region.pixels(:, 1)))
             uistack(region_plot2(current_label), 'top')
         else
-            region_plot2(current_label) = plot(lns(current_region2.pixels(:, 2)), lts(current_region2.pixels(:, 1)), '.k', 'Color', tcoverIn_color);
+            region_plot2(current_label) = plot(lns(current_region.pixels(:, 2)), lts(current_region.pixels(:, 1)), '.k', 'Color', tcoverIn_color);
         end
 
     end
@@ -73,20 +73,20 @@ if strcmp(t_cover, 'Yes')
 
     end
 
-    for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
-        current_label = str2double(current_region2.label);
+    for current_region = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+        current_label = str2double(current_region.label);
 
         label_already_in = label_in_labels(current_label, prev_labels2);
 
         if label_already_in
             set(region_plot_label2(current_label), ...
-                'Position', [lns( current_region2.bounds(1)) lts(current_region2.bounds(2), 1)], ...
+                'Position', [lns( current_region.bounds(1)) lts(current_region.bounds(2), 1)], ...
                 'visible', 'on');
             uistack(region_plot_label2(current_label), 'top')
         else
-            region_plot_label2(current_label) = text(lns(current_region2.bounds(1)), ...
-                lts(current_region2.bounds(2), 1), ...
-                strcat('g', current_region2.label), 'color', 'black', 'FontSize', 17);
+            region_plot_label2(current_label) = text(lns(current_region.bounds(1)), ...
+                lts(current_region.bounds(2), 1), ...
+                strcat('g', current_region.label), 'color', 'black', 'FontSize', 17);
         end
 
     end
@@ -103,25 +103,25 @@ if strcmp(t_cover, 'Yes')
 
     end
 
-    for current_region2 = current_labels2(~cellfun(@isempty, {current_labels2.label}))
-        current_label2 = str2double(current_region2.label);
+    for current_region = current_labels2(~cellfun(@isempty, {current_labels2.label}))
+        current_label = str2double(current_region.label);
         
-        [total_pixels, trash] = size(current_region2.pixels(:,2));
-        current_region2.region_area = getAreaRectaangularProj(current_region2.pixels, lns, lts);
-        current_labels2(current_label).region_area = current_region2.region_area;
+        [total_pixels, trash] = size(current_region.pixels(:,2));
+        current_region.region_area = getAreaRectaangularProj(current_region.pixels, lns, lts);
+        current_labels2(current_label).region_area = current_region.region_area;
         
-        distance = deltaAngleToArc(lts(current_region2.centroid(2)), lns(current_region2.centroid(1)), ...
+        distance = deltaAngleToArc(lts(current_region.centroid(2)), lns(current_region.centroid(1)), ...
             origin(2), origin(1));
         current_labels2(current_label).distance = distance;
 
 
-        distance = deltaAngleToArc(lts(current_region2.centroid(2)), lns(current_region2.centroid(1)), ...
+        distance = deltaAngleToArc(lts(current_region.centroid(2)), lns(current_region.centroid(1)), ...
             origin(2), origin(1));
-        legends{end+1}= sprintf('G%03d, %10d, %10.0f km2, %10.0f km\n', current_label2, total_pixels, current_region2.region_area, distance);
+        legends{end+1}= sprintf('G%03d, %10d, %10.0f km2, %10.0f km\n', current_label, total_pixels, current_region.region_area, distance);
 
         fprintf(fileID ,'%10s, G%03d, %6d, %6.0f, %6.0f, %6.2f, %3i %3i, %6.2f\n',...
-            date_time, current_label2, total_pixels, current_region2.region_area, distance,...
-            current_region2.minimum_temp, current_region2.min_temp_coord, current_region2.mean_temp);
+            date_time, current_label, total_pixels, current_region.region_area, distance,...
+            current_region.minimum_temp, current_region.min_temp_coord, current_region.mean_temp);
     end
 
     prev_labels2 = current_labels2;
@@ -218,7 +218,6 @@ if strcmp(t_core, 'Yes')
         fprintf(fileID,'%10s, C%03d, %6d, %6.0f, %6.0f, %6.2f, %3i %3i, %6.2f\n',...
             date_time, current_label, total_pixels, current_region.region_area, distance, ...
             current_region.minimum_temp, current_region.min_temp_coord, current_region.mean_temp);
-
     end
     
     prev_labels = current_labels;

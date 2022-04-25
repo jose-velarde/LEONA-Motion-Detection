@@ -2,8 +2,20 @@
 beep off;
 warning('off');
 clear all
-%%
-T_threshold = -32;
+try
+    fclose(fileID);
+    close(writerObj);
+catch
+end
+%% 
+% Pixel Area -> 3.4047
+% lon: deltaAngleToArc(32,64,32,64.018) _> 1.6992
+% lat: deltaAngleToArc(32,64,32.018,64) -> 2.0037
+% Sprite 1
+% deltaAngleToArc(-28.812507, -66.937308, -33.835, -64.489)
+
+%
+% Rectangular Projectiong Grid size (degrees)
 step = 0.018;
 % Yes: Load lightnings position. No: Read lightnings position
 load_cg_data = 'No';
@@ -13,6 +25,96 @@ load_rect_proj = 'Yes';
 t_cover = 'Yes';
 t_core = 'Yes';
 t_most = 'Yes';
+%% OBSERVATION NIGHT %%
+% Select observation night 1 to 9
+index = 1;
+%% Set temperature, area and distance thresholds for tracking
+% colors
+hot = [.85, .41, .09];
+warmer = [.87, .42, .06];
+warm = [.96, .83, .16];
+tepid = [.44, .75, .25];
+breeze = [0, .99, 1];
+cool = [0, .57, .58];
+chilly = [.32, .65, .98];
+cold = [.02, .20, 1];
+
+% Cloud cover
+T_cover = -34;
+min_pix_cover = 300;
+dist_cover = 4000;
+
+% Cloud convection cores
+T_core = -54;
+min_pix_core = 30;
+dist_core = 4000;
+
+% Cloud most convective cores
+T_most = -70;
+min_pix_most = 6;
+dist_most = 4000;
+%% Set colorbar threshold, temperatures above are shown in grayscale
+T_cb_threshold = T_cover;
+%% Observation dates start and end time
+% Set the date and times for observation start and end for the 9 observations
+% nights
+
+% SMS = 1
+% Anillaco = 2
+% La Maria = 3
+
+% Variable station indicates which stations where active that night, stations
+% coordinates to determine the station number
+station = { 2    , 1    , 1/3  , 1    , 3/(1),  2   , 2    , 2    , 2/3  };
+
+% Variable night is just an indicator
+night   = { 1    , 2    , 3    , 4    , 5    ,  6   , 7    , 8    , 9    };
+% The following set the start time as YYYY-MM-DD-hh:mm:ss and the end time as
+% YYYY-MM-DDEnd-hhEnd-mmEnd
+YYYY    = {'2019','2019','2019','2019','2019','2018','2018','2018','2018'};
+MM      = {'11'  ,'11'  ,'10'  ,'10'  ,'10'  ,'12'  ,'12'  ,'11'  ,'11'  };
+DD      = {'13'  ,'01'  ,'28'  ,'26'  ,'01'  ,'13'  ,'10'  ,'30'  ,'25'  };
+hh      = {'15'  ,'21'  ,'01'  ,'19'  ,'04'  ,'01'  ,'16'  ,'09'  ,'16'  };
+mm      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
+ss      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
+DDEnd   = {'14'  ,'03'  ,'31'  ,'29'  ,'03'  ,'15'  ,'13'  ,'01'  ,'27'  };
+hhEnd   = {'13'  ,'14'  ,'00'  ,'05'  ,'00'  ,'04'  ,'05'  ,'23'  ,'11'  };
+mmEnd   = {'10'  ,'10'  ,'10'  ,'10'  ,'10'  ,'15'  ,'15'  ,'15'  ,'15'  };
+%% Set the visualization extent (min lon, max lon, min lat, max lat)
+minlon = [-75    -70    -70    -65    -70    -70    -70    -70    -70];
+maxlon = [-55    -40    -40    -40    -25    -40    -45    -55    -50];
+minlat = [-40    -50    -40    -40    -50    -45    -45    -40    -45];
+maxlat = [-28    -25    -25    -20    -20    -28    -20    -25    -25];
+%% Set up new plot (rect)
+scrsz = get(groot,'ScreenSize');
+fig3 = figure('Position',[1 1 scrsz(3) scrsz(4)]);
+% Configure axis labels
+ax3 = axes('Parent', fig3, 'FontSize',16);
+hold(ax3, 'on');
+axis xy;
+axis equal;
+
+set(ax3,'xtick', -180:1:180, 'Layer','top');
+set(ax3,'ytick', -90:1:90);
+xlabel(ax3, 'Longitude (Degree)', 'FontSize', 16);
+ylabel(ax3, 'Latitude (Degree)', 'FontSize', 16);
+% Display grid
+% set(ax3, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', '-', 'GridColor', 'white', 'LineWidth', 0.1, 'GridAlpha', 1);
+
+%% Define colormap and colorbar (rect)
+% The following sets the colorbar from 20C to -90C
+cmin = 90;
+cmax = 20;
+% The following set gray scale for positive temperature, and jet colormap for
+% negative temperatures
+custom_gray = gray(80);
+cm3 = colormap([jet(cmin+T_cb_threshold); flipud(custom_gray(end+1-(cmax-T_cb_threshold):end, :))]);
+% cm3 = colormap([jet(cmin+T_threshold); flipud(gray(cmax-T_threshold))]);
+% Configure colorbar
+cb3 = colorbar;
+caxis([-(cmin) cmax ]);
+caxis('manual')
+title(cb3,'Cloud top temperature (C)')
 %%  Set station coordinates
 %  1. SMS 		    -29.442333, -53.821917
 %  2. Anillaco      -28.812507, -66.937308
@@ -41,68 +143,6 @@ stations_lat = [...
     -17.881116,...
     -15.555339,...
     -23.211277];
-
-%% OBSERVATION NIGHT %%
-% Select observation night 1 to 9
-index = 6;
-julian_day = cell(1000);
-ktt_aux = 1;
-
-%% Observation dates start and end time
-% Set the date and times for observation start and end for the 9 observations
-% nights
-
-% Variable station indicates which stations where active that night, stations
-% coordinates to determine the station number
-station = { 2    , 1    , 1/3  , 1    , 3/(1),  2   , 2    , 2    , 2/3  };
-
-% Variable night is just an indicator
-night   = { 1    , 2    , 3    , 4    , 5    ,  6   , 7    , 8    , 9    };
-% The following set the start time as YYYY-MM-DD-hh:mm:ss and the end time as
-% YYYY-MM-DDEnd-hhEnd-mmEnd
-YYYY    = {'2019','2019','2019','2019','2019','2018','2018','2018','2018'};
-MM      = {'11'  ,'11'  ,'10'  ,'10'  ,'10'  ,'12'  ,'12'  ,'11'  ,'11'  };
-DD      = {'13'  ,'01'  ,'28'  ,'26'  ,'01'  ,'13'  ,'10'  ,'30'  ,'25'  };
-hh      = {'15'  ,'21'  ,'01'  ,'19'  ,'04'  ,'01'  ,'16'  ,'09'  ,'16'  };
-mm      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
-ss      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
-DDEnd   = {'14'  ,'03'  ,'31'  ,'29'  ,'03'  ,'15'  ,'13'  ,'01'  ,'27'  };
-hhEnd   = {'22'  ,'14'  ,'00'  ,'05'  ,'00'  ,'08'  ,'05'  ,'23'  ,'11'  };
-mmEnd   = {'10'  ,'10'  ,'10'  ,'10'  ,'10'  ,'15'  ,'15'  ,'15'  ,'15'  };
-
-%% Set up new plot (rect)
-scrsz = get(groot,'ScreenSize');
-fig3 = figure('Position',[1 1 scrsz(3) scrsz(4)]);
-% Configure axis labels
-ax3 = axes('Parent', fig3, 'FontSize',16);
-hold(ax3, 'on');
-axis xy;
-axis equal;
-
-set(ax3,'xtick', -180:1:180, 'Layer','top');
-set(ax3,'ytick', -90:1:90);
-xlabel(ax3, 'Longitude (Degree)', 'FontSize', 16);
-ylabel(ax3, 'Latitude (Degree)', 'FontSize', 16);
-% Display grid
-% set(ax3, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', '-', 'GridColor', 'white', 'LineWidth', 0.1, 'GridAlpha', 1);
-
-%% Define colormap and colorbar (rect)
-% The following sets the colorbar from 20C to -90C
-cmin = 90;
-cmax = 20;
-% The following set gray scale for positive temperature, and jet colormap for
-% negative temperatures
-custom_gray = gray(80);
-cm3 = colormap([jet(cmin+T_threshold); flipud(custom_gray(end+1-(cmax-T_threshold):end, :))]);
-% cm3 = colormap([jet(cmin+T_threshold); flipud(gray(cmax-T_threshold))]);
-% Configure colorbar
-cb3 = colorbar;
-caxis([-(cmin) cmax ]);
-caxis('manual')
-title(cb3,'Cloud top temperature (C)')
-%% Plot legends
-% legends_handler2 = legend( , 'location', 'southwestoutside');
-
 %% Plot LEONA station markers
 % The plot object is 'Stations'
 Stations = plot(ax3, stations_lon, stations_lat, 'pblack', 'MarkerSize', 15,'MarkerFaceColor', 'm');
@@ -118,33 +158,15 @@ states = shaperead(brstates_shp,'UseGeoCoords',true);
 States = geoshow([states.Lat], [states.Lon],'Color','white');
 countries = shaperead(countries_shp,'UseGeoCoords',true);
 Countries = geoshow([countries.Lat], [countries.Lon],'Color','white', 'LineWidth', 1.5);
-%% Set the visualization extent (min lon, max lon, min lat, max lat)
-%% ZOOMED 2 (1: -70 -45 -40 -25)
-minlon = [-75    -70    -70    -65    -70    -70    -70    -70    -70];
-maxlon = [-50    -25    -25    -40    -25    -40    -45    -55    -50];
-minlat = [-40    -50    -40    -40    -50    -45    -45    -40    -45];
-maxlat = [-25    -25    -25    -20    -20    -28    -20    -25    -25];
-
 %% Define .nc files path (Geo)
-% Folder with GOES .nc data has to be YYYY_nc, ie '2018_nc' or '2019_nc'
-filepath_nc = strcat('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\GOES data\', YYYY{index}, '_nc\noaa-goes16\ABI-L2-CMIPF');
-
-%% Set temperature, area and distance thresholds
-% Cloud cover
-T_cover = -32;
-min_pix_cover = 500;
-dist_cover = 4000;
-
-% Cloud convection cores
-T_core = -52;
-min_pix_core = 250;
-dist_core = 4000;
-
-% Cloud most convective cores
-T_most = -72;
-min_pix_most = 10;
-dist_most = 4000;
-
+% Folder with GOES .nc data, folder tree structure by goes-downloader
+filepath_nc = strcat('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\GOES data\noaa-goes16\ABI-L2-CMIPF');
+% Set file prefix
+if strcmp(YYYY{index}, '2018')
+    nc_file_prefix = 'OR_ABI-L2-CMIPF-M3C13_G16_s';
+elseif strcmp(YYYY{index}, '2019')
+    nc_file_prefix = 'OR_ABI-L2-CMIPF-M6C13_G16_s';
+end
 %% Set color mask for temperature analysis
 % Because Imagesc is used to plot, plot colors depend on the temperature value
 % so the temperature matrix is divided by ranges and each range is assigned to a
@@ -152,22 +174,21 @@ dist_most = 4000;
 
 % Warm mask: 20C -> T_general_cover, gray colored
 warm_mask = 5;
-
 % General cover mask: T_general_cover -> T_convective_core,
 % light green and darker green
 T_cover_mask = -42;         % green
-tcoverIn_color = [0 0.6 0]; % darker green
-tcoverOut_color = [0 0.8 0]; % darker green
+tcoverIn_color = warm; % darker green
+tcoverOut_color = hot; % darker green
 
 % Convective cores mas: T_core -> T_most_convective_core
 T_core_mask = -52;          % red
-tcoreIn_color = [1 0 0];    % red
-tcoreOut_color = [1 1 0];   % yellow
+tcoreIn_color = breeze;    % red
+tcoreOut_color = cool;   % yellow
 
 % Most convective cores mask: T_most_convective_core -> -90C
 T_most_mask = -72;          % blue
-tmostIn_color = [0 0 1];    % blue
-tmostOut_color = [0 1 1];   % cyan
+tmostIn_color = cold;    % blue
+tmostOut_color = chilly;   % cyan
 %% Open text file object
 % Create text file to record parameters for each scan.
 % For each scan, isolated regions of tempreature T are found and parameterized.
@@ -198,21 +219,19 @@ if strcmp(record, 'Yes')
     open(writerObj);
     fig.CurrentCharacter = '4';
 end
+%% Initialize Aux variables
+julian_day = cell(1000);
+ktt_aux = 1;
 %% Hardcoded
-
 % Custom start time
 % DD{index} = '14';
-% hh{index} = '16';
-% mm{index} = '45';
-% No data after this time
-DDEnd{index} = '15';
-hhEnd{index} = '04';
-mmEnd{index} = '15';
+% hh{index} = '05';
+% mm{index} = '00';
 
 while 1
     %% Format filename
     julian_day{ktt_aux} = monthDayToJulianDay(MM{index}, DD{index});
-    image_name = strcat('OR_ABI-L2-CMIPF-M3C13_G16_s', YYYY{index}, julian_day{ktt_aux}, hh{index}, mm{index});
+    image_name = strcat(nc_file_prefix, YYYY{index}, julian_day{ktt_aux}, hh{index}, mm{index});
     file = dir(fullfile(filepath_nc, YYYY{index}, julian_day{ktt_aux}, hh{index},strcat(image_name, '*.nc')));
     
     % Check if it exists in the filenames cell array (data folder)
@@ -232,6 +251,7 @@ while 1
 
         latarray = flipud(rot90(fread(fid,[5424,5424],'float64')));
         lonarray = rot90(fread(fid2,[5424,5424],'float64'));
+        
         
         %% Get row/col of the max/min lat/lon (Geo)
         latsize = size(latarray,1);
@@ -284,6 +304,7 @@ while 1
     if strcmp(load_rect_proj, 'Yes')
         load(strcat('./data_mat/', 'OR_ABI-L2-CMIPF-M3C13_G16_s', YYYY{index}, julian_day{1}, '_rect_proj', '.mat'));
     else
+        fprintf('Processing data to calculate rectangular grid projection\n')
         USAPixToLatLon
         save(strcat('./data_mat/', 'OR_ABI-L2-CMIPF-M3C13_G16_s', YYYY{index}, julian_day{1}, '_rect_proj', '.mat'), 'coutrows', 'coutcols','lns', 'lts');
         fprintf('Finished saving rect grid\n')
@@ -311,6 +332,8 @@ while 1
         set(couttemp_plot, 'EdgeColor', 'none')
         % patch_fov is the plot object for the camera fov display
         patch_fov = patch([1,1], [2,2], 'red', 'FaceAlpha', 0.2, 'visible', 'off');
+        patch_fov2 = patch([1,1], [2,2], 'red', 'FaceAlpha', 0.2, 'visible', 'off');
+        
         % Set axis boundaries
         axis([minlon(index), maxlon(index), minlat(index), maxlat(index)]);
     else
@@ -340,6 +363,7 @@ while 1
         all_most_regions{ktt_aux} = current_labels3(~cellfun(@isempty, {current_labels3.label}));
         all_cover_regions{ktt_aux} = current_labels2(~cellfun(@isempty, {current_labels2.label}));
 
+        all_sprites{ktt_aux} = sprites_temp;
         all_pos_lightning{ktt_aux} = pos_lightning;
         all_neg_lightning{ktt_aux} = neg_lightning;
         all_lightning{ktt_aux} = tot_lightning;
@@ -351,20 +375,14 @@ while 1
         ktt_aux = ktt_aux + 1;
     end
 
-
     if fig3.CurrentCharacter == 'q'
         break
     end
     if fig3.CurrentCharacter == 'd'
-%         light_spr_goes_custom
-        
         [MM{index}, DD{index}, hh{index}, mm{index}] = addMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
         ktt_aux = ktt_aux + 1;
     end
-    
     if fig3.CurrentCharacter == 'a'
-%         light_spr_goes_custom
-        
         [MM{index}, DD{index}, hh{index}, mm{index}] = subMinutes(MM{index}, DD{index}, hh{index}, mm{index}, mmEnd{index});
         ktt_aux = ktt_aux - 1;
         if ktt_aux == 0
@@ -373,6 +391,7 @@ while 1
     end
     %% Write to video.           
     uistack(patch_fov, 'top')    
+    uistack(patch_fov2, 'top')    
     uistack(Stations, 'top')
 
     
@@ -380,8 +399,18 @@ while 1
         pause(0.01)
         frame = getframe(fig3);
         writeVideo(writerObj,frame);
+        imwrite(frame.cdata, strcat('png\', num2str(current_time), '.png'));
+    end
+    
+   
+    if strcmp(strcat(DD{index}, hh{index}, mm{index}), strcat(DDEnd{index}, hhEnd{index}, mmEnd{index}))
+        break
     end
 end
+fclose(fileID);
+close(writerObj);
+%% Save workspace
+save(strcat('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Matlab\workspace_',DD{index},'-',MM{index},'-',YYYY{index},'.mat'), '-v7.3')
 
 fig10 = figure(10);
 ax10 = axes('Parent', fig10);
@@ -424,10 +453,22 @@ colormap(jet);
 cb12 = colorbar;
 title(cb12,'Number of +/-CGs')
 
+fig13 = figure(13);
+ax13 = axes('Parent', fig13);
+% h13 = imagesc([xtick_histogram(1,1) xtick_histogram(1,end)], [Ts2(1,1) Ts2(1,end)], temptimetot2);
+h13 = imagesc(xtick_histogram(1,:),Ts2(1,:), temptimesprite2);
+% set(h13, 'EdgeColor', 'none')
+% set(gca,'xtick', xtick_histogram(1,1):xtick_histogram(1,end));
+% datetick('x','HH')
+xlabel('Time (UT)');
+ylabel('Temperature (C)');
+colormap(jet); 
+cb13 = colorbar;
+title(cb13,'Number of +/-CGs')
 
 %% Close file objects
 % Closes the text and video file objects after processing all scans.
 % If the script is manually terminated, i.e. with ctrl+c, the following commands
 % must be run manually on the Command Window.
-fclose(fileID);
-close(writerObj);
+% fclose(fileID);
+% close(writerObj);

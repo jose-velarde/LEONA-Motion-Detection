@@ -1,7 +1,7 @@
 function plot_fov(patch_fov, origin, azimuth, radius, color)
 circle = @(origin, azimuth, radius)  [origin(1) + radius*cosd(-azimuth+90); origin(2) + radius*sind(-azimuth+90)];         % Circle Function For Angles In Radians
-    fov_left = azimuth+12.5;
-    fov_right = azimuth-12.5;
+    fov_left = azimuth+15;
+    fov_right = azimuth-15;
     fov = fov_right:1:fov_left;
     
     arc = circle(origin, fov, radius);                                    % Matrix (2xN) Of (x,y) Coordinates
