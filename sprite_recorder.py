@@ -450,7 +450,7 @@ for video in video_list:
                 # # Delete the pixel count from the trigger frame event,
                 # # it modifies the average too much
                 # count_stack.pop()
-                stacked_image += frame
+                stacked_image = cv2.add(stacked_image, frame)
 
                 if not kcw.recording:
                     if not os.path.exists(

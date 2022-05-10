@@ -1,4 +1,4 @@
-function plot_fov(patch_fov, origin, azimuth, radius, color)
+function plot_fov(patch_fov, origin, azimuth, radius, color, visible)
 circle = @(origin, azimuth, radius)  [origin(1) + radius*cosd(-azimuth+90); origin(2) + radius*sind(-azimuth+90)];         % Circle Function For Angles In Radians
     fov_left = azimuth+15;
     fov_right = azimuth-15;
@@ -14,4 +14,4 @@ circle = @(origin, azimuth, radius)  [origin(1) + radius*cosd(-azimuth+90); orig
     poly_x =[[origin(1), right_fov(1)] arc(1,:) [origin(1), left_fov(1)]];
     poly_y =[[origin(2), right_fov(2)] arc(2,:) [origin(2), left_fov(2)]];
     
-    set(patch_fov, 'XData', poly_x, 'YData', poly_y, 'visible', 'on', 'FaceColor', color);
+    set(patch_fov, 'XData', poly_x, 'YData', poly_y, 'visible', visible, 'FaceColor', color);

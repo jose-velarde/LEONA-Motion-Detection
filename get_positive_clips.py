@@ -188,18 +188,28 @@ def deinterlace_clips(
                     #     cv2.imwrite(p + "field_2.png", second_field)
                     if capture.get(cv2.CAP_PROP_POS_FRAMES) == (trigger_frame):
                         triggered = True
-                        triggered_frames = 1
+                        triggered_frames = 0
 
+                    # if triggered:
+                    #     trigger_stack += frame
+                    # triggered_frames += 1
+
+                    # if triggered_frames % 2 != 0:
+                    #     cv2.imwrite(
+                    #         "{}trigger{}+.png".format(p, triggered_frames - 2),
+                    #         trigger_stack,
+                    #     )
+                    #     trigger_stack = 0
                     if triggered:
-                        trigger_stack += frame
-                        triggered_frames += 1
-
-                    if triggered_frames % 2 != 0:
                         cv2.imwrite(
-                            "{}trigger{}+.png".format(p, triggered_frames - 2),
-                            trigger_stack,
+                            "{}trigger+{}_first_field.bmp".format(p, triggered_frames),
+                            first_field,
                         )
-                        trigger_stack = 0
+                        cv2.imwrite(
+                            "{}trigger+{}_second_field.bmp".format(p, triggered_frames),
+                            second_field,
+                        )
+                        triggered_frames += 1
 
                     if triggered_frames == stacks_after + 1:
                         triggered_frames = 0
@@ -209,8 +219,8 @@ def deinterlace_clips(
                         capture.get(cv2.CAP_PROP_POS_FRAMES)
                         >= ((trigger_frame - 1) - stack_count)
                     ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (trigger_frame - 1):
-                        stacked_stelar += first_field
-                        stacked_stelar += second_field
+                        stacked_stelar = cv2.add(stacked_stelar, frame)
+                        # stacked_stelar = cv2.add(stacked_stelar, second_field)
                 else:
                     writer.write(frame)
 
@@ -219,9 +229,9 @@ def deinterlace_clips(
                     ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (
                         trigger_frame + stack_count
                     ):
-                        stacked_stelar += frame
+                        stacked_stelar = cv2.add(stacked_stelar, frame)
 
-            cv2.imwrite(p + "stack.png", stacked_stelar)
+            cv2.imwrite(p + "stack.bmp", stacked_stelar)
             stacked_stelar = 0
 
             writer.release()
@@ -302,7 +312,9 @@ Old_Positive_Clips = [
     # "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-28 Clips Santa Maria/",
     "C:/Users/JoseVelarde/Downloads/Personal/LEONA/LEONA-Motion-Detection/Footage review/2019-10-26 Clips Santa Maria/",
 ]
-
+Test_Clips = [
+    "C:/Users/sauli/Dropbox/Propuesta/First meeting/clips deinterlaced/2019-11-14 Clips Anillaco/Original/"
+]
 deinterlace_flag = True
 # deinterlace_flag = False
 
@@ -320,9 +332,9 @@ deinterlace_flag = True
 #     stacks_after=12,
 # )
 deinterlace_clips(
-    New_Positive_Clips,
+    Test_Clips,
     deinterlace_flag,
     trigger_frame=32,
-    stack_count=12,
+    stack_count=30,
     stacks_after=12,
 )

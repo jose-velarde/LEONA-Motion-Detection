@@ -21,10 +21,8 @@ if ~strcmp(current_day, DD{index})
         neglight = poslight;
         
         delete(neg_cg_plot)
-%         neg_cg_plot = plot(-65, -30, 'dk', 'Color', 'black', 'MarkerFaceColor', 'green' );
         neg_cg_plot = plot(-65, -30, '.','MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',9);
         delete(pos_cg_plot)
-%         pos_cg_plot = plot(-65, -30, 'pk', 'Color', 'black', 'MarkerFaceColor', 'red' , 'MarkerSize', 12);
         pos_cg_plot = plot(-65, -30, '+','MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',6);
         delete(sprites_plot)
         sprites_plot = plot(-65, -30, 'o','MarkerEdgeColor','black','MarkerSize',11);
@@ -51,11 +49,9 @@ if ~strcmp(current_day, DD{index})
         end
         
         delete(neg_cg_plot)
-%         neg_cg_plot = plot(-65, -30, 'dk', 'Color', 'black', 'MarkerFaceColor', 'green' );
         neg_cg_plot = plot(-65, -30, '.','MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',9);
 
         delete(pos_cg_plot)
-%         pos_cg_plot = plot(-65, -30, 'pk', 'Color', 'black', 'MarkerFaceColor', 'red' , 'MarkerSize', 12 );
         pos_cg_plot = plot(-65, -30, '+','MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',6);
         
         delete(sprites_plot)
@@ -127,8 +123,8 @@ sprites_temp = zeros(300,3);
 k = 1;
 for k1=1:size(spritesplot,1)
     % Find lat and lon
-    tr=find( abs(spritesplot(k1,6)-lts) == min(abs(spritesplot(k1,6)-lts)) );
-    tc=find( abs(spritesplot(k1,7)-lns) == min(abs(spritesplot(k1,7)-lns)) );
+    tr=find(abs(spritesplot(k1,6)-lts) == min(abs(spritesplot(k1,6)-lts)));
+    tc=find(abs(spritesplot(k1,7)-lns) == min(abs(spritesplot(k1,7)-lns)));
     
     sprites_temp(k,1:2) = [tr tc];
     sprites_temp(k,3) = couttemp(tr,tc);
@@ -180,11 +176,11 @@ tot_lightning = [neg_lightning; pos_lightning];
 % Ts5 = -100:5:10;                        % edges vector (5 in 5)
 Ts2 = -100:2:10;                        % edges vector (2 in 2)
 % Ts1 = -100:1:10;                        % edges vector (1 in 1)
+
 % Initialize the histograms vectors for deltaT = 2 C
-% ntspr2 = zeros(length(Ts2),1);
-% 
-% ntpos2 = ntspr2;
-% ntneg2 = ntspr2;
+ntspr2 = zeros(length(Ts2),1);
+ntpos2 = ntspr2;
+ntneg2 = ntspr2;
 
 if ~isempty(spritesplot)
     ntsprite2 = histc(sprites_temp(:,3),Ts2);
@@ -255,53 +251,7 @@ for current_region = current_labels2(~cellfun(@isempty, {current_labels2.label})
     current_labels2(current_label).neg_light = neg_lightning_cover(ismember(neg_lightning_cover(:,1:2),current_labels2(current_label).pixels,'rows'),:);
     neg_lightning_cover = setdiff(neg_lightning_cover, current_labels2(current_label).neg_light,'rows');
 end
-
 %%
-% % Loop 4 -  % positive light associated with sprite 
-% if ~isempty(possprplot)                                        
-% k = 1;
-% for k1=1:size(possprplot,1)
-%     tr=find( abs(possprplot(k1,6)-lts) == min(abs(possprplot(k1,6)-lts)) );
-%     tc=find( abs(possprplot(k1,7)-lns) == min(abs(possprplot(k1,7)-lns)) );
-%     if length(tr)==1 & length(tc)==1
-%         tempposspr(k)=couttemp(tr,tc);
-%     elseif length(tr)~=1 & length(tc)==1 
-%         tempposspr(k)=(couttemp(tr(1),tc)+couttemp(tr(2),tc))/2;
-%     elseif length(tr)==1 & length(tc)~=1
-%         tempposspr(k)=(couttemp(tr,tc(1))+couttemp(tr,tc(2)))/2;
-%     else
-%         tempposspr(k)=(couttemp(tr(1),tc(1))+couttemp(tr(2),tc(1))+...
-%             couttemp(tr(1),tc(2))+couttemp(tr(2),tc(2)))/4;
-%     end
-%     k=k+1;
-% end  
-% if size(tempposspr,2)>size(tempposspr,1)
-%     tempposspr=tempposspr';
-% end
-% end
-
-% Loop 5 -  % negative light associated with sprite 
-% if ~isempty(negsprplot)
-% k = 1;
-% for k1=1:size(negsprplot,1)
-%     tr = find( abs(negsprplot(k1,6)-lts) == min(abs(negsprplot(k1,6)-lts)) );
-%     tc = find( abs(negsprplot(k1,7)-lns) == min(abs(negsprplot(k1,7)-lns)) );
-%     if length(tr)==1 & length(tc)==1
-%        tempnegspr(k)=couttemp(tr,tc);
-%     elseif length(tr)~=1 & length(tc)==1 
-%            tempnegspr(k) = (couttemp(tr(1),tc)+couttemp(tr(2),tc))/2;
-%     elseif length(tr)==1 & length(tc)~=1
-%            tempnegspr(k) = (couttemp(tr,tc(1))+couttemp(tr,tc(2)))/2;
-%     else
-%         tempnegspr(k) = (couttemp(tr(1),tc(1))+couttemp(tr(2),tc(1))+...
-%         couttemp(tr(1),tc(2))+couttemp(tr(2),tc(2)))/4;
-%     end
-%     k=k+1;
-% end  
-% if size(tempnegspr,2)>size(tempnegspr,1)
-%     tempnegspr=tempnegspr';
-% end
- %end
 % waitforbuttonpress
 % pause(0.01)
 

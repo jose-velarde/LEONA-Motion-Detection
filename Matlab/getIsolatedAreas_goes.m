@@ -22,6 +22,7 @@ legends = {'Region, Pixels, Area, Dist'};
 
 %% Process current time
 date_time = strcat(YYYY{index},'-', MM{index},'-', DD{index},'-', hh{index},':', mm{index});
+current_time = str2double(strcat(YYYY{index}, MM{index}, DD{index}, hh{index}, mm{index}));
 
 %%
 % Set temperatures values to match a color in the imagesc
@@ -78,12 +79,32 @@ if strcmp(t_cover, 'Yes')
 
         label_already_in = label_in_labels(current_label, prev_labels2);
 
+%         if isBefore(current_time, 201911132040)
+%             continue
+%         end
+%         if isAfter(current_time, 201911132050)...
+%                 && isBefore(current_time, 201911132050) && ~strcmp(current_region.label, '59')
+%             continue
+%         end
+%         if isAfter(current_time, 201911132100)...
+%                 && isBefore(current_time, 201911132350) && ~strcmp(current_region.label, '83')
+%             continue
+%         end
+%         if isAfter(current_time, 201911140000)...
+%                 && isBefore(current_time, 201911140140) && ~strcmp(current_region.label, '83')
+%             continue
+%         end
+%         if isAfter(current_time, 201911140150) && ~strcmp(current_region.label, '3')
+%             continue
+%         end
+    
         if label_already_in
             set(region_plot_label2(current_label), ...
                 'Position', [lns( current_region.bounds(1)) lts(current_region.bounds(2), 1)], ...
                 'visible', 'on');
             uistack(region_plot_label2(current_label), 'top')
         else
+%             delete(region_plot_label2(current_label))
             region_plot_label2(current_label) = text(lns(current_region.bounds(1)), ...
                 lts(current_region.bounds(2), 1), ...
                 strcat('g', current_region.label), 'color', 'black', 'FontSize', 17);
@@ -96,6 +117,28 @@ if strcmp(t_cover, 'Yes')
 
         label_already_in = label_in_labels(prev_label, current_labels2);
 
+%         if isBefore(current_time, 201911132040)
+%             continue
+%         end
+%         if isAfter(current_time, 201911132050)...
+%                 && isBefore(current_time, 201911132100)...
+%                 && ~strcmp(previous_region2.label, '59')
+%             continue
+%         end
+%         if isAfter(current_time, 201911132110)...
+%                 && isBefore(current_time, 201911132350)...
+%                 && ~strcmp(previous_region2.label, '83')
+%             continue
+%         end
+%         if isAfter(current_time, 201911140000)...
+%                 && isBefore(current_time, 201911140140)...
+%                 && ~strcmp(previous_region2.label, '83')
+%             continue
+%         end
+%         if isAfter(current_time, 201911140200) && ~strcmp(previous_region2.label, '3')
+%             continue
+%         end
+        
         if ~label_already_in
             set(region_plot_label2(prev_label), 'visible', 'off');
             delete(region_plot_label2(prev_label))

@@ -1,21 +1,25 @@
 %night 1
-load('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Matlab\workspace_14-11-2019_34-300_54-30_70-10.mat')
+% clear all
+% load('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Matlab\workspace_14-11-2019_track_all.mat')
 
 % night 6
 % load C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Matlab\all_temp_data_13-12-2018.mat
 % [g74 g62 g66 g81 g62 g80 g85 g83 g92 g88 g97 g105 g76 g55 g140 g143 g148 g150 g152 
 % [c17 c28 c29 c30 c31
 
-%se desprenden         85 92     141 143 148 150 152
-%1: 55 66 62 74 80 81 83     140 
-%2: 76 
-%3: 97
-%4: 105
+% se desprenden         85 92     141 143 148 150 152
+% 1: 55 66 62 74 80 81 83     140 
+% 2: 76 
+% 3: 97
+% 4: 105
 
 % ROI_labels_cover = {'55', '66', '62', '74', '80', '81', '83', '140', '76', '97', '105'};
 %     ROI_labels_cover = {'55', '66', '62', '74', '80', '81', '83', '85', '92', '140', '141', '143', '148', '150', '152','76', '97', '105'};
 
 %     ROI_labels_core = {'17','20','21','22','23','24','25','27','28','29','30','31'};
+
+ROI_labels_cover = {'a'};
+ROI_labels_core = {'a'};
 
 plot_all = 0;
 
@@ -23,12 +27,7 @@ calc_cover_area = 1;
 calc_core_area = 1;
 
 calc_cover_cg = 1;
-
-if calc_cover_cg
-    calc_core_cg = 0;
-else
-    calc_core_cg = 1;
-end
+calc_core_cg = 0;
 
 if calc_cover_area
     T_selected = '-34';
@@ -36,22 +35,26 @@ elseif calc_core_area
     T_selected = '-54';
 end
 
-
 all_region_pos = cell(300,1);
 all_region_neg= cell(300,1);
 Ts2 = -100:2:10;
 
+%% Initialize plot variables
+marker_size = 3;
 skip_time_axis = 6;
 start_t = 20;
-end_t = 13;
-x_min = find(xtick_histogram == start_t);
+end_t = 12;
+x_min = find(xtick_histogram >= (start_t-0.1) & xtick_histogram <= (start_t+0.1));
 x_max = find(xtick_histogram == end_t);
 k = x_min;
 
-% xlim = [1 size(xtick_histogram,2)];
+x_sprite_start = find(xtick_histogram >= (5.5-0.1) & xtick_histogram <= (5.5+0.1));
+x_sprite_end = find(xtick_histogram >= (6.6667-0.1) & xtick_histogram <= (6.6667+0.1));
+
+
 x_lim = [x_min x_max];
 y_lim = [-70 -30];
-%% 
+%% Initialize data variables
 temptimepos3 = [];
 temptimeneg3 = [];
 temptimetot3 = [];
@@ -63,7 +66,8 @@ filtered_regions = {'301'};
 filepath_shp = 'C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Shapefiles\';
 countries_shp = strcat(filepath_shp, 'ne_10m_admin_0_countries.shp');
 brstates_shp = strcat(filepath_shp, 'BRA_ADM1.shp');
-
+%% sprite circle test
+circle = @(origin, azimuth, radius)  [origin(1) + radius*cosd(-azimuth+90); origin(2) + radius*sind(-azimuth+90)];
 %% Create plots
 if plot_all
     scrsz = get(groot,'ScreenSize');
@@ -75,7 +79,7 @@ if plot_all
     set(temp_plot, 'EdgeColor', 'none')
     % The plot objects are 'States' and 'Countries'
     countries = shaperead(countries_shp,'UseGeoCoords',true);
-    Countries = geoshow([countries.Lat], [countries.Lon],'Color',[0.6 0.6 0.6], 'LineWidth', 1.5);
+    Countries = geoshow([countries.Lat], [countries.Lon],'Color',[0.9 0.9 0.9], 'LineWidth', 1.5);
     % Colores
     hot = [.85, .41, .09];
     warmer = [.87, .42, .06];
@@ -86,27 +90,34 @@ if plot_all
     chilly = [.32, .65, .98];
     cold = [.02, .20, 1];
     % Plot core temperature clouds
-    cover_plot = plot(1,1, '.k', 'Color', warm);
-    core_plot = plot(1,1, '.k', 'Color', breeze);
-    most_plot = plot(1,1, '.k', 'Color', cool);
+    cover_plot = plot(1,1, '.k', 'Color', warm, 'MarkerSize',10);
+    core_plot = plot(1,1, '.k', 'Color', breeze, 'MarkerSize',10);
+    most_plot = plot(1,1, '.k', 'Color', cool, 'MarkerSize',10);
+    % Plot sprites
+    sprite_plot = plot(1, 1, 'o','MarkerEdgeColor','blue','MarkerSize',10);
+    for i = 1:10
+%         sprite_circle(i) = patch([1,1], [2,2], 'red', 'FaceAlpha', 0, 'visible', 'off');
+        sprite_circle(i) = plot(1, 1, 'o', 'MarkerEdgeColor', 'black', 'MarkerSize', 0.75, 'visible', 'off');
+    end
     % Plot negative and positive lightning
     % Plot lightning out of target thunderstorm
-    sprite_plot = plot(1, 1, 'o','MarkerEdgeColor','blue','MarkerSize',10);
     lightning_plot_missed = plot(1, 1, '.','MarkerEdgeColor','blue','MarkerFaceColor','blue','MarkerSize',9);
     lightning_plot_neg = plot(1, 1, '.','MarkerEdgeColor','k','MarkerFaceColor','k','MarkerSize',9);
-    lightning_plot_pos = plot(1, 1, '+','MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',6);
+    lightning_plot_pos = plot(1, 1, '+','MarkerEdgeColor','m','MarkerFaceColor','m','MarkerSize',9);
     % Plot labels
     labels_plot_cover = text(1, 1, '1', 'FontSize',16);
     labels_plot_core = text(1, 1, '1', 'FontSize',16);
     % Set axis and grid
-    set(review_ax,'xtick', -180:2:180, 'Layer','top');
-    set(review_ax,'ytick', -90:2:90);
+    set(review_ax,'xtick', -180:1:180, 'Layer','top');
+    set(review_ax,'ytick', -90:1:90);
     set(review_ax, 'XGrid', 'on', 'YGrid', 'on', 'GridLineStyle', '-', 'GridColor', [0.6 0.6 0.6], 'LineWidth', 0.1, 'GridAlpha', 0.5);
-    axis([minlon(index), maxlon(index), minlat(index), maxlat(index)]);
+%     axis([minlon(index), maxlon(index), minlat(index), maxlat(index)]);
+    axis([-69, -58, minlat(index), -31]);
+    
     % Set colormap
     cmin = 90;
     cmax = 20;
-    T_threshold = -34;
+    T_threshold = 0;
     custom_gray = gray(80);
     cm3 = colormap([jet(cmin+T_threshold); flipud(custom_gray(end+1-(cmax-T_threshold):end, :))]);
     
@@ -117,8 +128,17 @@ if plot_all
     % Define filter points
     filter_points_plot = plot(review_ax,[-66 -64 -60],  [-38 -38 -40], '.k', 'color', 'green','MarkerSize', 30, 'visible', 'off');
 end
-%% Create time string array
 
+%% Video writer object
+record = 'Yes';
+if strcmp(record, 'Yes')
+    aviFilename = strcat('_Test_', YYYY{index},'-', MM{index},'-', DD{index},'-', hh{index}, mm{index},'.avi');
+    writerObj = VideoWriter(aviFilename);
+    writerObj.FrameRate = 1;
+    open(writerObj);
+    fig.CurrentCharacter = 'd';
+end
+%% Create time string array
 labelX = cell(1);
 for all_t = 1:size(xtick_histogram,2)
     tt = xtick_histogram(all_t);
@@ -154,13 +174,25 @@ while 1
     all_s = all_sprites{k};
     %% Define ROI
     time = xtick_histogram(k);
-    if time >= 1.8333 && time < 20
-        ROI_labels_cover = {'69'};
-    else 
-        ROI_labels_cover = {'96'};
+%     if time >= 1.8333 && time < 20
+%         ROI_labels_cover = {'69'};
+%     else 
+%         ROI_labels_cover = {'96'};
+%     end%     
+
+    if time >= 20.8332 && time < 21
+        ROI_labels_cover = {'185'};
+    elseif time >= 21 && time <= 23.8334
+%     if time >= 21 && time <= 23.8334
+        ROI_labels_cover = {'209'};
+    elseif time >= 0 && time < 1.8333
+        ROI_labels_cover = {'209'};
+    elseif time > 1.8333 && time <= 19.999
+        ROI_labels_cover = {'11'};
     end
     
-    ROI_labels_core = {'55'};
+%     ROI_labels_core = {'55'};
+    ROI_labels_core = {'80'};
     
     %% Calculate core cg
     if calc_core_cg
@@ -171,24 +203,24 @@ while 1
             region_pixels_core = [region_pixels_core; region.pixels];
             region_labels_core = [region_labels_core; [region.bounds(1,2) region.bounds(1,1) str2double(region.label)]];
 
-            % concatenate lightning
-            region_pos = [region_pos; region.pos_light];
-            region_neg = [region_neg; region.neg_light];
-            ntpos3 = histc(region_pos(:,3),Ts2);
-            ntpos3 =  ntpos3(:);
-            ntneg3 = histc(region_neg(:,3),Ts2);
-            ntneg3 =  ntneg3(:);
-            nttot3 = ntpos3 + ntneg3;
-            
-            cg(1,k) = size(region_pos,1);
-            cg(2,k) = size(region_neg,1);
-            cg(3,k) = size(region_pos,1) + size(region_neg,1);
-
-            sprite(1,k) = size(all_s,1);
-            
-            temptimepos3(:,k) = ntpos3;
-            temptimeneg3(:,k) = ntneg3;
-            temptimetot3(:,k) = nttot3; 
+%             % concatenate lightning
+%             region_pos = [region_pos; region.pos_light];
+%             region_neg = [region_neg; region.neg_light];
+%             ntpos3 = histc(region_pos(:,3),Ts2);
+%             ntpos3 =  ntpos3(:);
+%             ntneg3 = histc(region_neg(:,3),Ts2);
+%             ntneg3 =  ntneg3(:);
+%             nttot3 = ntpos3 + ntneg3;
+%             
+%             cg(1,k) = size(region_pos,1);
+%             cg(2,k) = size(region_neg,1);
+%             cg(3,k) = size(region_pos,1) + size(region_neg,1);
+% 
+%             sprite(1,k) = size(all_s,1);
+%             
+%             temptimepos3(:,k) = ntpos3;
+%             temptimeneg3(:,k) = ntneg3;
+%             temptimetot3(:,k) = nttot3; 
         end
     end
     %% Calculate core area -54
@@ -276,15 +308,7 @@ while 1
                 area(1,k) = region.region_area;
                 min_temp(1,k) = region.minimum_temp;
             end
-%             if ~any(strcmp(ROI_labels_cover, region.label))
-%                 area(1,k) = 0;
-%                 continue
-%             end
-%             ind = str2double(region.label);
-%             area(ind,k) = region.region_area;
         end
-        
-        
     end
     
     if isempty(region_pixels_cover)  && calc_cover_cg
@@ -302,6 +326,7 @@ while 1
     ntsprite3 = histc(all_s(:,3),Ts2);
     ntsprite3 = ntsprite3(:);
     temptimesprite3(:,k) = ntsprite3;
+    %% Erase plots
     
     if plot_all
         set(temp_plot, 'XData', lns, 'YData', lts, 'CData', all_t{1});
@@ -313,46 +338,68 @@ while 1
         set(lightning_plot_pos, 'visible', 'off')
         set(lightning_plot_neg, 'visible', 'off')
         set(lightning_plot_missed, 'visible', 'off')
-            
+        i = 0;
+        for i = 1:10
+            set(sprite_circle(i), 'visible', 'off')
+        end
     end
-    
+    %% Draw plots -34
+
     if ~isempty(region_pixels_cover) && plot_all && calc_cover_cg
         all_l{1} = all_l{1}(all_l{1}(:,3) <= 0,:);
         all_l{1} = setdiff(all_l{1},region_pos, 'rows');
         all_l{1} = setdiff(all_l{1},region_neg, 'rows');
         set(lightning_plot_missed, 'XData', lns(all_l{1}(:,2)), 'YData', lts(all_l{1}(:,1)), 'visible', 'on');   
 
-        set(sprite_plot, 'XData', lns(all_s(:,2)), 'YData', lts(all_s(:,1)), 'visible', 'on');        
+%         set(sprite_plot, 'XData', lns(all_s(:,2)), 'YData', lts(all_s(:,1)), 'visible', 'on');        
         set(lightning_plot_pos, 'XData', lns(region_pos(:,2)), 'YData', lts(region_pos(:,1)), 'visible', 'on');
         set(lightning_plot_neg, 'XData', lns(region_neg(:,2)), 'YData', lts(region_neg(:,1)), 'visible', 'on');
 
-        set(cover_plot, 'XData', lns(region_pixels_cover(:,2)), 'YData', lts(region_pixels_cover(:,1)));
+%         set(cover_plot, 'XData', lns(region_pixels_cover(:,2)), 'YData', lts(region_pixels_cover(:,1)));
         labels_plot_cover = text(lns(region_labels_cover(:,2)), lts(region_labels_cover(:,1)), strcat('g', num2str(region_labels_cover(:,3))), 'FontSize',16);    
+        i = 0;
+        for i = 1:size(all_s, 1)
+            arc = circle([lns(all_s(i,2)) lts(all_s(i,1))], 1:0.5:360, 0.27);
+            set(sprite_circle(i), 'XData', arc(1,:), 'YData', arc(2,:), 'visible', 'on')
+        end
+        legend([cover_plot core_plot lightning_plot_pos lightning_plot_neg lightning_plot_missed sprite_circle(i) ],...
+            {'-34C Tc Area','-54C Tc Area','+CG','-CG', 'out of ROI CG','Sprites'})
     end
-    
+    %% Draw plots -54
     if ~isempty(region_pixels_core) && plot_all && calc_core_cg
-        
 %         all_l{1} = all_l{1}(all_l{1}(:,3) <= 0,:);
 %         all_l{1} = setdiff(all_l{1},region_pos, 'rows');
 %         all_l{1} = setdiff(all_l{1},region_neg, 'rows');
 %         all_l{1} = intersect(all_l{1}(:,1:2), extended_region, 'rows');
-
 %         set(lightning_plot_missed, 'XData', lns(all_l{1}(:,2)), 'YData', lts(all_l{1}(:,1)), 'visible', 'on');   
   
-        set(lightning_plot_missed, 'XData', lns(extended_lightning(:,2)), 'YData', lts(extended_lightning(:,1)), 'visible', 'on');   
+%         set(lightning_plot_missed, 'XData', lns(extended_lightning(:,2)), 'YData', lts(extended_lightning(:,1)), 'visible', 'on');   
 
-        set(sprite_plot, 'XData', lns(all_s(:,2)), 'YData', lts(all_s(:,1)), 'visible', 'on');        
+%         set(sprite_plot, 'XData', lns(all_s(:,2)), 'YData', lts(all_s(:,1)), 'visible', 'on');
+%         set(lightning_plot_pos, 'XData', lns(region_pos(:,2)), 'YData', lts(region_pos(:,1)), 'visible', 'on');
+%         set(lightning_plot_neg, 'XData', lns(region_neg(:,2)), 'YData', lts(region_neg(:,1)), 'visible', 'on');
 
-        set(lightning_plot_pos, 'XData', lns(region_pos(:,2)), 'YData', lts(region_pos(:,1)), 'visible', 'on');
-        set(lightning_plot_neg, 'XData', lns(region_neg(:,2)), 'YData', lts(region_neg(:,1)), 'visible', 'on');
-
-        set(core_plot, 'XData', lns(region_pixels_core(:,2)), 'YData', lts(region_pixels_core(:,1)), 'visible', 'on');
+%         set(core_plot, 'XData', lns(region_pixels_core(:,2)), 'YData', lts(region_pixels_core(:,1)), 'visible', 'on');
         labels_plot_core = text(lns(region_labels_core(:,2)), lts(region_labels_core(:,1)), strcat('c', num2str(region_labels_core(:,3))), 'FontSize',16);
     end
     
+	%% Record 	
     if plot_all
         title(strcat('Night 12/13/2022-12/14/2022. Time:', labelX(k)))
-        waitforbuttonpress
+        if strcmp(record, 'Yes')
+            pause(0.01)
+            frame = getframe(fig_review);
+            writeVideo(writerObj,frame);
+            if xtick_histogram(k) >= 20 && xtick_histogram(k) <= 23.99
+                date_time = strcat('20191213', strrep(labelX{k}, ':', ''));
+            else
+                date_time = strcat('20191214', strrep(labelX{k}, ':', ''));
+            end
+            imwrite(frame.cdata, strcat('png\','Test_', date_time, '.png'));
+        else
+            waitforbuttonpress
+        end
+        
         if fig_review.CurrentCharacter == 'd'
             k = k + 1;
         end
@@ -366,11 +413,14 @@ while 1
         k = k + 1;
     end
     
+    
     if k > size(all_core_regions,2)
         break
     end
     
 end
+
+close(writerObj);
 
 %% Create the histograms
 % *************************************************************************
@@ -382,17 +432,16 @@ nice_green = [0.4660 0.6740 0.1880];
 nice_cyan = [0.3010 0.7450 0.9330];
 nice_red = [0.6350 0.0780 0.1840];
 
-%% +CG
 scrsz = get(groot,'ScreenSize');
-% All regions
 fig10 = figure('Position',[1 1 scrsz(3) scrsz(4)]);
-% ax10 = axes('Parent', fig10);
+
+%% Number of CGs (Histogram)
 subplot(4,2,1)
-% temptimepos2
+% h10 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimetot3);
 h10 = pcolor(1:size(xtick_histogram,2), Ts2(1,:), temptimetot3);
 set(h10, 'EdgeColor', 'none')
-% h10 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimetot3);
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45); 
 set(gca,'YLim', y_lim);
 
@@ -401,17 +450,13 @@ ylabel('Temperature (C)');
 colormap(jet); 
 cb10 = colorbar;
 title(cb10,'Number of CGs')
-% -52 regions regions
-
-% fig13 = figure(13);
-% ax13 = axes('Parent', fig13);
-% ax13 = axes('Parent', fig10);
+%% Number of Sprites (Histogram)
 subplot(4,2,3)
-h13 = pcolor(1:size(xtick_histogram,2), Ts2(1,:), temptimesprite3);
-set(h13, 'EdgeColor', 'none')
+% h11 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimesprite3);
+h11 = pcolor(1:size(xtick_histogram,2), Ts2(1,:), temptimesprite3);
+set(h11, 'EdgeColor', 'none')
 
-% h13 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimesprite3);
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45); 
 set(gca,'YLim', y_lim);
 
@@ -420,17 +465,13 @@ ylabel('Temperature (C)');
 colormap(jet); 
 cb13 = colorbar;
 title(cb13,'Number of Sprites')
-
-
-%% -CG
-% all regions
-% fig11 = figure(11);
-% ax11 = axes('Parent', fig11);
+%% Number of -CGs (Histogram)
 subplot(4,2,5)
-% h11 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimeneg3);
-h11 = pcolor(1:size(xtick_histogram,2), Ts2(1,:), temptimeneg3);
-set(h11, 'EdgeColor', 'none')
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+% h12 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimeneg3);
+h12 = pcolor(1:size(xtick_histogram,2), Ts2(1,:), temptimeneg3);
+set(h12, 'EdgeColor', 'none')
+
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45); 
 set(gca,'YLim', y_lim);
 
@@ -439,16 +480,13 @@ ylabel('Temperature (C)');
 colormap(jet); 
 cb11 = colorbar;
 title(cb11,'Number of -CGs')
-
-% -52 regions regions
-% fig14 = figure(14);
-% ax14 = axes('Parent', fig14);
-% ax14 = axes('Parent', fig11);
+%% Number of +CGs (Histogram)
 subplot(4,2,7)
-% h14 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimepos3);
-h14 = pcolor(1:size(xtick_histogram,2),Ts2(1,:), temptimepos3);
-set(h14, 'EdgeColor', 'none')
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+% h13 = imagesc(1:size(xtick_histogram,2),Ts2(1,:), temptimepos3);
+h13 = pcolor(1:size(xtick_histogram,2),Ts2(1,:), temptimepos3);
+set(h13, 'EdgeColor', 'none')
+
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45); 
 set(gca,'YLim', y_lim);
 
@@ -457,47 +495,73 @@ ylabel('Temperature (C)');
 colormap(jet); 
 cb14 = colorbar;
 title(cb14,'Number of +CGs')
-
 %% Plot areas
-% subplot(4,2,[5 7], 'Position', [0.1300 0.1000 0.300 0.350])
 subplot(4,2,2)
-plot(1:size(area,2),area(1:2,:), '-.')
+hold on
+h14 = plot(1:size(area,2),area(1,:), '-o',...
+    1:size(area,2),area(2,:), '-d');
+
+set(h14, { 'Color' }, {nice_cyan; nice_orange}, { 'MarkerSize' }, {marker_size;marker_size},...
+    {'MarkerFaceColor'}, {nice_cyan; nice_orange})
 
 legend('Area T <= -34C', 'Area T <= -54C')
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45); 
 xlabel('Time (UT)');
 ylabel(strcat('Isolated Regions Area (km2)'));
 
-%% Plot sprites
-
-sprite(1:85) = NaN;
-sprite(97:end) = NaN;
-
+%Draw start/end of sprite observation
+h_vertical = plot([x_sprite_start x_sprite_start],[0 max(area(1,:))],[x_sprite_end x_sprite_end],[0 max(area(1,:))]);
+set(h_vertical, { 'Color' }, {nice_red; nice_red},...
+    {'MarkerFaceColor'}, {nice_red; nice_red})
+hold off
+%% Plot sprites and +cg
 subplot(4,2,4)
-plot(1:1:size(sprite,2),sprite(1,1:1:end), '-o', 'Color', nice_red, 'MarkerSize',5, 'MarkerFaceColor', nice_red)
+hold on
+% plot(1:1:size(sprite,2),sprite(1,1:1:end), '-o', 'Color', nice_red, 'MarkerSize',5, 'MarkerFaceColor', nice_red)
+[h15, h_sprites, h_cgplus] = plotyy(1:1:size(sprite,2),sprite(1,1:1:end),1:1:size(cg,2),cg(1,1:1:end), 'bar','plot');
 
-legend('Sprites')
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+set(h_sprites, 'FaceColor', nice_orange)
+set(h_cgplus, 'Marker', 'o', 'MarkerSize', marker_size, 'MarkerFaceColor', nice_cyan);
+
+% bar(1:1:size(sprite,2),sprite(1,1:1:end))    
+% plot(1:1:size(cg,2),cg(1,1:1:end), '-s', 'Color', nice_red, 'MarkerSize',marker_size, 'MarkerFaceColor', nice_red)
+
+legend('Sprites', '+CG')
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45);
-set(gca,'yLim', [0 5]);
+
 xlabel('Time (UT)');
-ylabel(strcat('N of Sprites'));
+set(h15(1),'YLim', [0 max(sprite(1,1:1:end))+0.5]);
+set(h15(2),'YLim', [0 (max(sprite(1,1:1:end))+0.5)*10]);
+ylabel(h15(1),strcat('N of Sprites'));% left y-axis
+ylabel(h15(2),strcat('N of +CG')) % right y-axis
+
+% %Draw start/end of sprite observation
+% h_vertical = plot([x_sprite_start x_sprite_start],[0 1000],[x_sprite_end x_sprite_end],[0 1000]);
+% set(h_vertical, { 'Color' }, {nice_red; nice_red},...
+%     {'MarkerFaceColor'}, {nice_red; nice_red})
+hold off
 %% Plot lightning total and -cg
 subplot(4,2,6)
-h15 = plot(1:skip_time_axis:size(cg,2),cg(3,1:skip_time_axis:end), '-o', ...
-    1:skip_time_axis:size(cg,2),cg(2,1:skip_time_axis:end), '-d',...
-    1:skip_time_axis:size(cg,2),cg(1,1:skip_time_axis:end), '-s');
-set(h15, { 'Color' },{nice_orange; nice_cyan; nice_purple}, { 'MarkerSize' }, {5;5;5},...
-    {'MarkerFaceColor'}, {nice_orange; nice_cyan; nice_purple})
+hold on
+h16 = plot(1:1:size(cg,2),cg(3,1:end), '-o', ...
+    1:1:size(cg,2),cg(2,1:end), '-d');
+set(h16, { 'Color' },{nice_orange; nice_cyan}, { 'MarkerSize' }, {marker_size;marker_size},...
+    {'MarkerFaceColor'}, {nice_orange; nice_cyan})
 
-legend('Total CG', '-CG', '+CG')
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+legend('Total CG', '-CG')
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45);
 xlabel('Time (UT)');
 ylabel(strcat('N of CGs and -CGs '));
+
+%Draw start/end of sprite observation
+h_vertical = plot([x_sprite_start x_sprite_start],[0 max(cg(3,1:end))],[x_sprite_end x_sprite_end],[0 max(cg(3,1:end))]);
+set(h_vertical, { 'Color' }, {nice_red; nice_red},...
+    {'MarkerFaceColor'}, {nice_red; nice_red})
+hold off
 % %% Plot lightning +cg
-% % subplot(4,2,8, 'Position', [0.5725 0.1000 0.295 0.355])
 % subplot(4,2,8)
 % plot(1:skip_time_axis:size(cg,2),cg(1,1:skip_time_axis:end), '-o', 'Color', nice_orange, 'MarkerSize',5, 'MarkerFaceColor', nice_orange)
 % legend('+CG')
@@ -508,16 +572,42 @@ ylabel(strcat('N of CGs and -CGs '));
 % ylabel(strcat('N of +CGs'));
 %% Minimum temperature
 subplot(4,2,8)
-h16 = plot(1:skip_time_axis:size(min_temp,2), min_temp(1,1:skip_time_axis:end), '-o',...
-    1:skip_time_axis:size(min_temp,2), min_temp(2,1:skip_time_axis:end), '-d');
+hold on
+h17 = plot(1:1:size(min_temp,2), min_temp(1,1:end), '-o');
 
-set(h16, { 'Color' }, {nice_orange; nice_cyan}, { 'MarkerSize' }, {5;5},...
-    {'MarkerFaceColor'}, {nice_orange; nice_cyan})
+set(h17, { 'Color' }, {nice_orange}, { 'MarkerSize' }, {marker_size},...
+    {'MarkerFaceColor'}, {nice_orange})
 
-%     'Color', nice_orange, 'MarkerSize',5, 'MarkerFaceColor', nice_orange)
-legend('Minimum Temperature -34', 'Minimum Temperature -54')
+legend('Minimum Temperature')
 
-set(gca,'XTick', 1:skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,1:skip_time_axis:end));
+set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
 set(gca,'XLim', x_lim, 'XTickLabelRotation', 45);
+set(gca,'YLim', [-80 -30]);
 xlabel('Time (UT)');
 ylabel(strcat('Minimum Temperature'));
+
+%Draw start/end of sprite observation
+h_vertical = plot([x_sprite_start x_sprite_start], [-80 -30], [x_sprite_end x_sprite_end], [-80 -30]);
+set(h_vertical, { 'Color' }, {nice_red; nice_red},...
+    {'MarkerFaceColor'}, {nice_red; nice_red})
+hold off
+%% Minimum temperature
+% subplot(4,2,8)
+% h17 = plot(1:1:size(min_temp,2), min_temp(1,1:1:end), '-o',...
+%     1:1:size(min_temp,2), min_temp(2,1:1:end), '-d');
+% 
+% set(h17, { 'Color' }, {nice_orange; nice_cyan}, { 'MarkerSize' }, {marker_size;marker_size},...
+%     {'MarkerFaceColor'}, {nice_orange; nice_cyan})
+% 
+% %     'Color', nice_orange, 'MarkerSize',5, 'MarkerFaceColor', nice_orange)
+% legend('Minimum Temperature -34', 'Minimum Temperature -54')
+% 
+% set(gca,'XTick', x_lim(1):skip_time_axis:size(xtick_histogram,2), 'XTickLabel', labelX(1,x_lim(1):skip_time_axis:end));
+% set(gca,'XLim', x_lim, 'XTickLabelRotation', 45);
+% xlabel('Time (UT)');
+% ylabel(strcat('Minimum Temperature'));
+
+
+
+% deltaAngleToArc(-30, -61, -30, -60)
+% deltaAngleToArc(-30, -60, -30.3, -60)

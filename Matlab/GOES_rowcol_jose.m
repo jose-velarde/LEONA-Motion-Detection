@@ -41,17 +41,19 @@ cold = [.02, .20, 1];
 
 % Cloud cover
 T_cover = -34;
-min_pix_cover = 300;
+% min_pix_cover = 300;
+min_pix_cover = 5;
 dist_cover = 4000;
 
 % Cloud convection cores
 T_core = -54;
-min_pix_core = 30;
+% min_pix_core = 30;
+min_pix_core = 5;
 dist_core = 4000;
 
 % Cloud most convective cores
 T_most = -70;
-min_pix_most = 6;
+min_pix_most = 2;
 dist_most = 4000;
 %% Set colorbar threshold, temperatures above are shown in grayscale
 T_cb_threshold = T_cover;
@@ -74,16 +76,16 @@ night   = { 1    , 2    , 3    , 4    , 5    ,  6   , 7    , 8    , 9    };
 YYYY    = {'2019','2019','2019','2019','2019','2018','2018','2018','2018'};
 MM      = {'11'  ,'11'  ,'10'  ,'10'  ,'10'  ,'12'  ,'12'  ,'11'  ,'11'  };
 DD      = {'13'  ,'01'  ,'28'  ,'26'  ,'01'  ,'13'  ,'10'  ,'30'  ,'25'  };
-hh      = {'15'  ,'21'  ,'01'  ,'19'  ,'04'  ,'01'  ,'16'  ,'09'  ,'16'  };
+hh      = {'20'  ,'21'  ,'01'  ,'19'  ,'04'  ,'01'  ,'16'  ,'09'  ,'16'  };
 mm      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
 ss      = {'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  ,'00'  };
 DDEnd   = {'14'  ,'03'  ,'31'  ,'29'  ,'03'  ,'15'  ,'13'  ,'01'  ,'27'  };
-hhEnd   = {'13'  ,'14'  ,'00'  ,'05'  ,'00'  ,'04'  ,'05'  ,'23'  ,'11'  };
+hhEnd   = {'12'  ,'14'  ,'00'  ,'05'  ,'00'  ,'04'  ,'05'  ,'23'  ,'11'  };
 mmEnd   = {'10'  ,'10'  ,'10'  ,'10'  ,'10'  ,'15'  ,'15'  ,'15'  ,'15'  };
 %% Set the visualization extent (min lon, max lon, min lat, max lat)
-minlon = [-75    -70    -70    -65    -70    -70    -70    -70    -70];
-maxlon = [-55    -40    -40    -40    -25    -40    -45    -55    -50];
-minlat = [-40    -50    -40    -40    -50    -45    -45    -40    -45];
+minlon = [-70    -70    -70    -65    -70    -70    -70    -70    -70];
+maxlon = [-56    -40    -40    -40    -25    -40    -45    -55    -50];
+minlat = [-36    -50    -40    -40    -50    -45    -45    -40    -45];
 maxlat = [-28    -25    -25    -20    -20    -28    -20    -25    -25];
 %% Set up new plot (rect)
 scrsz = get(groot,'ScreenSize');
@@ -355,7 +357,6 @@ while 1
     
     if fig3.CurrentCharacter == '4'
         getIsolatedAreas_goes
-        % Plot +CG, -CG and prepare to plot spectograms
         light_spr_goes_custom
         
         all_temperature{ktt_aux} = couttemp;
@@ -411,60 +412,6 @@ fclose(fileID);
 close(writerObj);
 %% Save workspace
 save(strcat('C:\Users\sauli\Downloads\Soft_Tesis\OpenCV\Matlab\workspace_',DD{index},'-',MM{index},'-',YYYY{index},'.mat'), '-v7.3')
-
-fig10 = figure(10);
-ax10 = axes('Parent', fig10);
-% pcolor([xtick_histogram(1,1) xtick_histogram(1,end)], [Ts2(1,1) Ts2(1,end)], temptimepos2);
-h10 = imagesc(xtick_histogram(1,:),Ts2(1,:), temptimepos2);
-% set(h10, 'EdgeColor', 'none')
-set(gca,'xtick', xtick_histogram(1,1):xtick_histogram(1,end));
-
-% set(gca,'xtick', xtick_histogram(1,1) xtick_histogram(1,end));
-xlabel('Time (UT)');
-ylabel('Temperature (C)');
-colormap(jet); 
-cb10 = colorbar;
-title(cb10,'Number of +CGs')
-
-
-fig11 = figure(11);
-ax11 = axes('Parent', fig11);
-% imagesc([xtick_histogram(1,1) xtick_histogram(1,end)], [Ts2(1,1) Ts2(1,end)], temptimeneg2);
-h11 = imagesc(xtick_histogram(1,:),Ts2(1,:), temptimeneg2);
-% set(h11, 'EdgeColor', 'none')
-set(gca,'xtick', xtick_histogram(1,1):xtick_histogram(1,end));
-xlabel('Time (UT)');
-ylabel('Temperature (C)');
-colormap(jet); 
-cb11 = colorbar;
-title(cb11,'Number of -CGs')
-
-
-fig12 = figure(12);
-ax12 = axes('Parent', fig12);
-% h12 = imagesc([xtick_histogram(1,1) xtick_histogram(1,end)], [Ts2(1,1) Ts2(1,end)], temptimetot2);
-h12 = imagesc(xtick_histogram(1,:),Ts2(1,:), temptimetot2);
-% set(h12, 'EdgeColor', 'none')
-% set(gca,'xtick', xtick_histogram(1,1):xtick_histogram(1,end));
-% datetick('x','HH')
-xlabel('Time (UT)');
-ylabel('Temperature (C)');
-colormap(jet); 
-cb12 = colorbar;
-title(cb12,'Number of +/-CGs')
-
-fig13 = figure(13);
-ax13 = axes('Parent', fig13);
-% h13 = imagesc([xtick_histogram(1,1) xtick_histogram(1,end)], [Ts2(1,1) Ts2(1,end)], temptimetot2);
-h13 = imagesc(xtick_histogram(1,:),Ts2(1,:), temptimesprite2);
-% set(h13, 'EdgeColor', 'none')
-% set(gca,'xtick', xtick_histogram(1,1):xtick_histogram(1,end));
-% datetick('x','HH')
-xlabel('Time (UT)');
-ylabel('Temperature (C)');
-colormap(jet); 
-cb13 = colorbar;
-title(cb13,'Number of +/-CGs')
 
 %% Close file objects
 % Closes the text and video file objects after processing all scans.
