@@ -221,6 +221,13 @@ def deinterlace_clips(
                     ) and (capture.get(cv2.CAP_PROP_POS_FRAMES)) <= (trigger_frame - 1):
                         stacked_stelar = cv2.add(stacked_stelar, frame)
                         # stacked_stelar = cv2.add(stacked_stelar, second_field)
+                        cv2.imwrite(
+                            "{}frame{}_original.jpg".format(
+                                p, int(capture.get(cv2.CAP_PROP_POS_FRAMES))
+                            ),
+                            frame,
+                        )
+
                 else:
                     writer.write(frame)
 

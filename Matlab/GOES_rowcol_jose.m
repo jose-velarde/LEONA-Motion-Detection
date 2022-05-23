@@ -56,7 +56,7 @@ T_most = -70;
 min_pix_most = 2;
 dist_most = 4000;
 %% Set colorbar threshold, temperatures above are shown in grayscale
-T_cb_threshold = T_cover;
+T_cb_threshold = -34;
 %% Observation dates start and end time
 % Set the date and times for observation start and end for the 9 observations
 % nights
@@ -105,7 +105,7 @@ ylabel(ax3, 'Latitude (Degree)', 'FontSize', 16);
 
 %% Define colormap and colorbar (rect)
 % The following sets the colorbar from 20C to -90C
-cmin = 90;
+cmin = 70;
 cmax = 20;
 % The following set gray scale for positive temperature, and jet colormap for
 % negative temperatures
@@ -368,7 +368,7 @@ while 1
         all_pos_lightning{ktt_aux} = pos_lightning;
         all_neg_lightning{ktt_aux} = neg_lightning;
         all_lightning{ktt_aux} = tot_lightning;
-
+        all_parents{ktt_aux} = pos_spr_lightning;
 %         pause(0.00001)
 %         waitforbuttonpress
 

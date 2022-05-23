@@ -10,11 +10,7 @@ if index == 1 && isBefore(current_time, 201911140500)
     azimuth = 143.24;
     plot_fov(patch_fov, origin, azimuth, radius, 'none', 'off');
 end
-% 0530
-% 0610
-% 0620
-% 0640
-% Initial az
+
 if isAfter(current_time, 201911140500)...
         && isBefore(current_time, 201911140530)
     origin = [stations_lon(2), stations_lat(2)];

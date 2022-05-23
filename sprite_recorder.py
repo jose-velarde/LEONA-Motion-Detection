@@ -246,10 +246,10 @@ def get_videos_list(rootdir):
     video_list = []
     for root, dirs, files in os.walk(rootdir):
         for file in files:
-            path = os.path.join(root, file)
-            string_match = regexavi.match(path)
+            fullpath = os.path.join(root, file)
+            string_match = regexavi.match(fullpath)
             if string_match:
-                video_list.append(path)
+                video_list.append(fullpath)
     return video_list
 
 
@@ -454,16 +454,16 @@ for video in video_list:
 
                 if not kcw.recording:
                     if not os.path.exists(
-                        "{}/{}".format(save_folder, video[len(path) : -4])
+                        "{}/{}".format(save_folder, video[len(args["path"]) : -4])
                     ):
-                        os.makedirs("{}/{}".format(save_folder, video[len(path) : -4]))
+                        os.makedirs("{}/{}".format(save_folder, video[len(args["path"]) : -4]))
                     p = "{}/{}/{} - original.avi".format(
                         save_folder,
-                        video[len(path) : -4],
+                        video[len(args["path"]) : -4],
                         int(capture.get(cv2.CAP_PROP_POS_FRAMES)),
                     )
                     with open(
-                        "{}.txt".format(save_folder, video[len(path) : -4]), "w"
+                        "{}.txt".format(save_folder, video[len(args["path"]) : -4]), "w"
                     ) as file:
                         pass
                     kcw.start(p, args["fps"])
@@ -494,17 +494,17 @@ for video in video_list:
                 # Create video file clip if not recording, insert triggered frame number on file name
                 if not kcw.recording:
                     if not os.path.exists(
-                        "{}/{}".format(save_folder, video[len(path) : -4])
+                        "{}/{}".format(save_folder, video[len(args["path"]) : -4])
                     ):
-                        os.makedirs("{}/{}".format(save_folder, video[len(path) : -4]))
+                        os.makedirs("{}/{}".format(save_folder, video[len(args["path"]) : -4]))
                         filename = "./{}/{}.txt".format(
-                            save_folder, video[len(path) : -4]
+                            save_folder, video[len(args["path"]) : -4]
                         )
                         with open(filename, "w") as nf:
                             pass
                     p = "{}/{}/{} - original.avi".format(
                         save_folder,
-                        video[len(path) : -4],
+                        video[len(args["path"]) : -4],
                         int(capture.get(cv2.CAP_PROP_POS_FRAMES)),
                     )
 
